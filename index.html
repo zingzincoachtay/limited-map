@@ -7,13 +7,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
 </header>
 <body>
-<textarea id="BINGMAPAPIJSON" rows=10 cols=160 onChange="parseCoordinates();"></textarea>
+<textarea id="BINGMAPAPIJSON" rows=10 cols=160 onChange="parseBingMapAPIJSON();"></textarea>
 <p>
-<button type="button" onClick="parseCoordinates();">XY</button>
-<input type="text" id="far">
+<button type="button" onClick="parseBingMapAPIJSON();">XY</button>
+<script language="javascript">
+  let x = document.createElement("INPUT");
+  x.setAttribute("type","text");
+  x.setAttribute("defaultValue","");
+  x.setAttribute("id",bingmapapijson_t)
+</script>
 </p>
-
 <div id="err"></div>
+
 <script language="javascript">
   var ExcelToJSON = function() {
 
