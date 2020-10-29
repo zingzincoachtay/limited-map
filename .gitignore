@@ -36,3 +36,4 @@ inc/
 
 *.xlsx
 *.json
+*.geojson

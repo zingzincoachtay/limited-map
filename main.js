@@ -1,6 +1,21 @@
 var bingmapapijson_t = 'far';
 var errmsg = '';
+var url = '\\\\hagcsv005\\PURCHASING\\02 QUOTES\\MAPPABLE DATA.xlsx';
 
+function LiveLong(o) {
+  Object.defineProperty(this, "mapjson", {
+    set: function(o) {
+      mapjson = o;
+    },
+    get: function() {
+      return mapjson;
+    },
+    configurable: false
+  });
+}
+function saveMapGlobally(o) {
+  mapdata = o;
+}
 function parseJSONs(s) {
   if(s.length==0)  ReadyToExport(['']);
   var t = (/\r?\n/.test(s)) ? s.split(/\r?\n/) : [s];
@@ -52,9 +67,16 @@ var makeBox = {
     y.setAttribute("rows","10");
     y.setAttribute("cols","20");
     document.body.appendChild(y);
-  }
+  },
+  DefaultTarget : function (){
+    const y = document.createElement("INPUT");
+    y.setAttribute("type","text");
+    y.setAttribute("id","target");
+    y.setAttribute("defaultValue",url);
+    document.body.appendChild(y);
+  },
+
 };
 unstringify = (s) => JSON.parse(s);
 format_json = (db) => JSON.parse( document.getElementById(db).value );
 format_t = (t) => document.getElementById(bingmapapijson_t).value = t;
-// https://d3js.org

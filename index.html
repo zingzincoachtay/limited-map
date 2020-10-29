@@ -1,28 +1,119 @@
-<html>
-<header>
-  <title></title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Something Pretty</title>
   <script src="./main.js"></script>
   <script src="./xlsx2json.js"></script>
-  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+  <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+  integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+  crossorigin=""
+  />
+  <script
+  src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+  integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+  crossorigin=""
+  ></script>
+  <style>
+  </style>
 </header>
 <body>
-<textarea id="BINGMAPAPIJSON" rows=10 cols=160 onInput="parseJSONs(this.value);" tabindex="1" onFocus="this.select()"></textarea>
+<textarea id="BINGMAPAPIJSON" rows=12 cols=100 onInput="parseJSONs(this.value);" tabindex="1" onFocus="this.select()"></textarea>
+<div id="gErr"></div>
 <p>
   <script language="javascript">
+    var ourdb = new LiveLong([]);
     makeBox.NAns();
   </script>
 </p>
-<div id="gErr"></div>
 
-<div >Custom Map</div>
-<button onClick="map();" style="width:100px;font-weight:bold;font-size:16pt;">Custom Map</button>
+<input type="file" id="db" />
+<div id="err"></div>
 <script language="javascript">
   //https://stackoverflow.com/questions/8238407/how-to-parse-excel-xls-file-in-javascript-html5
-  document.getElementById("err").innerHTML = (typeof wb);
+  //https://redstapler.co/sheetjs-tutorial-convert-excel-html-table/
+  $('#db').change(function(e) {
+    var reader = new FileReader();
+    reader.readAsArrayBuffer(e.target.files[0]);
+    reader.onload = function(e){
+      var data = new Uint8Array(reader.result);
+      var workbook = XLSX.read(data,{type:'array'});
+      //Store in global variable
+      window.mapdata = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+    }
+    document.getElementById("err").innerHTML = window.mapdata.length;
+    document.getElementById("BINGMAPAPIJSON").value = JSON.stringify( window.mapdata );
+  });
 </script>
-<div id="err"></div>
+
+<div >Custom Map</div>
+<div id="map" style="width:960px;height:720px;"></div>
+<script type="text/javascript">
+  function onMapClick(e){
+    L.popup()
+      .setLatLng(e.latlng)
+      .setContent("Closest supplier is "+ e.latlng.toString())
+      .openOn(map);
+  }
+  //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
+  var cHAGC = [39.640784,-86.831823], cHALF = [40.363639,-86.835809];
+
+  var map = L.map('map',{
+    scrollWheelZoom:false,
+    center: [39.640784,-86.831823],
+    zoom: 5
+  });
+  L.Icon.Default.prototype.options.iconSize = [20,30];
+  var mHAGC = L.marker(cHAGC,{
+    "keyboard":true,
+    "title":"Heartland Automotive",
+    "zIndexOffset":1000}).addTo(map);
+  var mHALF = L.marker(cHALF,{
+    "keyboard":true,
+    "title":"Heartland Automotive - Lafayette",
+    "zIndexOffset":999}).addTo(map);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  // Iowa State Univ Mesonet is good, but I want the hurricane data.
+  //L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi", {
+  //  layers: 'nexrad-n0q',
+  //  format: 'image/png',
+  //  transparent: true,
+  //  attribution: "Weather data © 2012 IEM Nexrad"
+  //}).addTo(map);
+  // Instead, I drew the data from U.S. Geological Survey for the hazards data.
+  // Understandably, the layers are named differently.
+  // Go to Capability > Layer > Layer queryable="?" to find the layer name to parse.
+  // Reference: https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
+  /*
+  L.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?", {
+    layers: '1',
+    format: 'image/png',
+    transparent: true,
+    attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
+    opacity: 0.4
+  }).addTo(map);
+  */
+
+  var inMiles = [100,200,300,500,1000], inMeters = [];
+  inMiles.forEach((e) => inMeters.push(e/1.609344*1000));
+
+  // Radius provided in meters
+  inMeters.forEach((e) => L.circle(cHAGC,{radius:e,fillOpacity:0.05}).addTo(map));
+
+  map.on('click', onMapClick);
+
+</script>
+
+<script language="javascript">
+</script>
 
 </body>
 </html>

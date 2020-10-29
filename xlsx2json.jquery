@@ -1,0 +1,31 @@
+
+//https://stackoverflow.com/questions/8238407/how-to-parse-excel-xls-file-in-javascript-html5
+//https://redstapler.co/sheetjs-tutorial-convert-excel-html-table/
+
+/*
+function map(){
+  var s = stringifyWB(url);
+}
+function fetchWB(u){}
+*/
+function stringifyWB(u){
+  var reader = new FileReader();
+  reader.readAsArrayBuffer(u.target.files[0]);
+  reader.onload = function(e){
+    var data = new Uint8Array(reader.result);
+    var workbook = XLSX.read(data,{type:'array'});
+    var mapdata = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+    //return JSON.stringify(mapdata);
+    return reader;
+  }
+}
+function stringifyWB_local(u){
+  var xl = new FileReader();
+  xl.readAsArrayBuffer(u);
+  xl.onload = function(e){
+    var data = new Uint8Array(xl.result);
+    var workbook = XLSX.read(data, {type:"array"});
+    var mapdata = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+    document.getElementById("gErr").innerHTML = JSON.stringify(mapdata);
+  }
+}
