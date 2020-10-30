@@ -40,7 +40,7 @@
       if( document.getElementById("map") ){
         var POI;
         markers.forEach((s,i) => {
-          POI = placeMarker(s);
+          POI = placeMarker(s,L,map);
           //POI.popup
         });
       }
@@ -55,7 +55,7 @@
   $(document).ready(function() {
     // Made this variable global, so onChange event can use the map reference
     map = L.map('map',{ // Can't bake into Class because of 'map' field
-      scrollWheelZoom : false,
+      scrollWheelZoom : true,
       center : OffCenter(epicenter.c,-1,0),
       zoom : 5
     });

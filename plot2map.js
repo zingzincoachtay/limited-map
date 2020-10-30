@@ -1,4 +1,4 @@
-var map,markers;
+var map,L,markers;
 var leafletmaplayer = 'map';
 var origins = [
   {"c":[39.640784,-86.831823],"z":1000,"name":"Heartland Automotive"},
@@ -35,21 +35,24 @@ function placeOrigin(x,Layer,map){
     "title" : x.name,
     "zIndexOffset":x.z}).addTo(map);
 }
-function placeMarker(x){
-  return L.marker([x.Latitude,x.Longitude],{
+function placeMarker(x,Layer,map){
+  return Layer.marker([x.Latitude,x.Longitude],{
     "keyboard" : false,
     "title" : x.Supplier
   }).addTo(map);
 }
 function weatherLayer(phenom,L,map) {
-  if( /^hurricane$/i.test(phenom) ) return hazardHurricane(L,map);
-  if( /^hail|sleet$/i.test(phenom) ) return hazardHailSleet(L,map);
-  if( /^rain|snow$/i.test(phenom) ) return Clouds(L,map);
-}
-function hazardHurricane(Layer,map) {
-  // Instead, I drew the data from U.S. Geological Survey for the hazards data.
-  // Understandably, the layers are named differently.
+  // I drew the data from U.S. Geological Survey.
+  // https://nowcoast.noaa.gov/help/#!section=map-service-list
   // Go to Capability > Layer > Layer queryable="?" to find the layer name to parse.
+
+  Clouds(L,map);
+  if( /^warning$/i.test(phenom) ) weatherWarnings(L,map);
+  if( /^hurricane$/i.test(phenom) ) hazardHurricane(L,map);
+}
+function Clouds(Layer,map) {
+  // Recent Weather Radar Imagery
+  // Updated every 5 seconds, lasting several hours?
   // Reference: https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
   return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?", {
     layers: '1',
@@ -59,18 +62,27 @@ function hazardHurricane(Layer,map) {
     opacity: 0.5
   }).addTo(map);
 }
-function hazardHailSleet(Layer,map) {
-}
-function Clouds(Layer,map) {
-  // Iowa State Univ Mesonet is good, but I want the hurricane data.
-  /*
-  return Layer.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi", {
-    layers: 'nexrad-n0q',
+function hazardHurricane(Layer,map) {
+  // Watches, Warnings, and Track/Intensity Forecasts
+  // https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
+  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer?", {
+    layers: '1',
     format: 'image/png',
     transparent: true,
-    attribution: "Weather data © 2012 IEM Nexrad"
+    attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
+    opacity: 0.5
   }).addTo(map);
-  */
+}
+function weatherWarnings(Layer,map) {
+  // Long-Duration Hazards (e.g. Inland & Coastal Flooding/High Winds/High Seas)
+  // https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
+  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/WMSServer?", {
+    layers: '1',
+    format: 'image/png',
+    transparent: true,
+    attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
+    opacity: 0.5
+  }).addTo(map);
 }
 
 OffCenter = (c,y,x) => [c[0]+y,c[1]+x];
