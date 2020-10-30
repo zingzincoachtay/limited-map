@@ -3,11 +3,9 @@
 <head>
 <meta charset="utf-8">
 <title>Something Pretty</title>
-  <script src="./main.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
-  <script src="./xlsx2json.js"></script>
   <link
   rel="stylesheet"
   href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
@@ -24,19 +22,9 @@
   </style>
 </header>
 <body>
-<textarea id="BINGMAPAPIJSON" rows=12 cols=100 onInput="parseJSONs(this.value);" tabindex="1" onFocus="this.select()"></textarea>
-<div id="gErr"></div>
-<p>
-  <script language="javascript">
-    var ourdb = new LiveLong([]);
-    makeBox.NAns();
-  </script>
-</p>
-
 <input type="file" id="db" />
 <div id="err"></div>
 <script language="javascript">
-  var mapdata;
   //https://stackoverflow.com/questions/8238407/how-to-parse-excel-xls-file-in-javascript-html5
   //https://redstapler.co/sheetjs-tutorial-convert-excel-html-table/
   $('#db').change(function(e) {
@@ -47,47 +35,44 @@
       var workbook = XLSX.read(data,{type:'array'});
       // Store in global variable
       // Alternative, retrieve the output JSON from the field?
-      var markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
-      document.getElementById("BINGMAPAPIJSON").value = JSON.stringify( markers );
+      // Plot only occurs when the data is loaded anyways.
+      markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+      if( document.getElementById("map") ){
+        var POI;
+        markers.forEach((s,i) => {
+          POI = placeMarker(s);
+          //POI.popup
+        });
+      }
     }
   });
 </script>
 
-<div >Custom Map</div>
 <div id="map" style="width:960px;height:720px;"></div>
 <script type="text/javascript">
   //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
-  var cHAGC = [39.640784,-86.831823], cHALF = [40.363639,-86.835809];
-  var jsonMarkers = document.getElementById("BINGMAPAPIJSON").value;
+  var epicenter = origins[0];
+  $(document).ready(function() {
+    // Made this variable global, so onChange event can use the map reference
+    map = L.map('map',{ // Can't bake into Class because of 'map' field
+      scrollWheelZoom : false,
+      center : OffCenter(epicenter.c,-1,0),
+      zoom : 5
+    });
+    DrawBaseMapLayer(L,map);
+    L.Icon.Default.prototype.options.iconSize = [20,30];
 
-  var map = L.map('map',{
-    scrollWheelZoom:false,
-    center: cHAGC,
-    zoom: 5
+    var mHAGC = placeOrigin(epicenter,L,map);
+    var mHALF = placeOrigin(origins[1],L,map);
+    // /*
+    var now = new Date(); // Only show Weather Map occasionally...
+    if( (now.getSeconds() % 5) )  weatherLayer('hurricane',L,map);
+    // */
+    // Radius provided in meters
+    inMeters.forEach((e) => L.circle(epicenter.c,{radius:e,fillOpacity:0.05}).addTo(map));
+
+    map.on('click', onMapClick);
   });
-  var mHAGC = L.marker(cHAGC,{
-    "keyboard":true,
-    "title":"Heartland Automotive",
-    "zIndexOffset":1000}).addTo(map);
-  var mHALF = L.marker(cHALF,{
-    "keyboard":true,
-    "title":"Heartland Automotive - Lafayette",
-    "zIndexOffset":999}).addTo(map);
-
-  jsonMarkers.forEach((x,i) => {
-    L.marker([x.Latitude,x.Longitude],{
-      "keyboard" : false,
-      "title" : x.Supplier
-    }).addTo(map);
-  });
-
-  //weatherLayer('hurricane',L,map);
-
-  // Radius provided in meters
-  inMeters.forEach((e) => L.circle(cHAGC,{radius:e,fillOpacity:0.05}).addTo(map));
-
-  map.on('click', onMapClick);
-
 </script>
 
 <script language="javascript">
