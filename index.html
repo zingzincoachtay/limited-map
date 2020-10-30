@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <title>Something Pretty</title>
   <script src="./main.js"></script>
-  <script src="./xlsx2json.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+  <script src="./xlsx2json.js"></script>
   <link
   rel="stylesheet"
   href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
@@ -19,6 +19,7 @@
   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
   crossorigin=""
   ></script>
+  <script src="./plot2map.js"></script>
   <style>
   </style>
 </header>
@@ -35,6 +36,7 @@
 <input type="file" id="db" />
 <div id="err"></div>
 <script language="javascript">
+  var mapdata;
   //https://stackoverflow.com/questions/8238407/how-to-parse-excel-xls-file-in-javascript-html5
   //https://redstapler.co/sheetjs-tutorial-convert-excel-html-table/
   $('#db').change(function(e) {
@@ -43,32 +45,26 @@
     reader.onload = function(e){
       var data = new Uint8Array(reader.result);
       var workbook = XLSX.read(data,{type:'array'});
-      //Store in global variable
-      window.mapdata = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+      // Store in global variable
+      // Alternative, retrieve the output JSON from the field?
+      var markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+      document.getElementById("BINGMAPAPIJSON").value = JSON.stringify( markers );
     }
-    document.getElementById("err").innerHTML = window.mapdata.length;
-    document.getElementById("BINGMAPAPIJSON").value = JSON.stringify( window.mapdata );
   });
 </script>
 
 <div >Custom Map</div>
 <div id="map" style="width:960px;height:720px;"></div>
 <script type="text/javascript">
-  function onMapClick(e){
-    L.popup()
-      .setLatLng(e.latlng)
-      .setContent("Closest supplier is "+ e.latlng.toString())
-      .openOn(map);
-  }
   //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
   var cHAGC = [39.640784,-86.831823], cHALF = [40.363639,-86.835809];
+  var jsonMarkers = document.getElementById("BINGMAPAPIJSON").value;
 
   var map = L.map('map',{
     scrollWheelZoom:false,
-    center: [39.640784,-86.831823],
+    center: cHAGC,
     zoom: 5
   });
-  L.Icon.Default.prototype.options.iconSize = [20,30];
   var mHAGC = L.marker(cHAGC,{
     "keyboard":true,
     "title":"Heartland Automotive",
@@ -78,32 +74,14 @@
     "title":"Heartland Automotive - Lafayette",
     "zIndexOffset":999}).addTo(map);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-  // Iowa State Univ Mesonet is good, but I want the hurricane data.
-  //L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi", {
-  //  layers: 'nexrad-n0q',
-  //  format: 'image/png',
-  //  transparent: true,
-  //  attribution: "Weather data © 2012 IEM Nexrad"
-  //}).addTo(map);
-  // Instead, I drew the data from U.S. Geological Survey for the hazards data.
-  // Understandably, the layers are named differently.
-  // Go to Capability > Layer > Layer queryable="?" to find the layer name to parse.
-  // Reference: https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
-  /*
-  L.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?", {
-    layers: '1',
-    format: 'image/png',
-    transparent: true,
-    attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
-    opacity: 0.4
-  }).addTo(map);
-  */
+  jsonMarkers.forEach((x,i) => {
+    L.marker([x.Latitude,x.Longitude],{
+      "keyboard" : false,
+      "title" : x.Supplier
+    }).addTo(map);
+  });
 
-  var inMiles = [100,200,300,500,1000], inMeters = [];
-  inMiles.forEach((e) => inMeters.push(e/1.609344*1000));
+  //weatherLayer('hurricane',L,map);
 
   // Radius provided in meters
   inMeters.forEach((e) => L.circle(cHAGC,{radius:e,fillOpacity:0.05}).addTo(map));
