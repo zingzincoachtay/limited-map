@@ -39,9 +39,10 @@
       markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
       if( document.getElementById("map") ){
         var POI;
-        markers.forEach((s,i) => {
-          POI = placeMarker(s,L,map);
-          //POI.popup
+        markers.forEach((p,i) => {
+          POI = placeMarker({c:[p.Latitude,p.Longitude],name:p.Supplier},L,map);
+          //&reg; &copy;
+          POI.bindPopup(p.Supplier+"<br>"+p.City+", "+p.State);
         });
       }
     }
@@ -60,16 +61,21 @@
       zoom : 5
     });
     DrawBaseMapLayer(L,map);
-    L.Icon.Default.prototype.options.iconSize = [20,30];
+
+    // Radius provided in meters
+    CirclesInMiles.map(mi2m).forEach((e) => {
+      L.circle(epicenter.c,{radius:e,opacity:0.5,fillOpacity:0.05}).addTo(map)
+    });
 
     var mHAGC = placeOrigin(epicenter,L,map);
+    mHAGC.bindPopup(epicenter.name+"<BR>");
     var mHALF = placeOrigin(origins[1],L,map);
-    // /*
+    mHALF.bindPopup(origins[1].name+"<BR>");
+    /*
     var now = new Date(); // Only show Weather Map occasionally...
     if( (now.getSeconds() % 5) )  weatherLayer('hurricane',L,map);
-    // */
-    // Radius provided in meters
-    inMeters.forEach((e) => L.circle(epicenter.c,{radius:e,fillOpacity:0.05}).addTo(map));
+    if( (now.getSeconds() % 7) )  weatherLayer('covid',L,map);
+    */
 
     map.on('click', onMapClick);
   });
