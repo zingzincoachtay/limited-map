@@ -44,14 +44,14 @@ function onMapClick(e){
 }
 function distancesOf(origin){
   var BigD = [];
-  markers.forEach((m, i) => {
+  for(m of markers){
     var LittleD = unit_great_circle_distance(
       {Lat:origin[0],Lon:origin[1]},
       {Lat:m.Latitude,Lon:m.Longitude}
     );
     BigD.push({name:m.Supplier,span:LittleD});
-  });
-  return nearby(BigD);
+  }
+  return nearby( [...new Set(BigD)] );
 }
 function nearby(d){
   var recent = d.pop();
@@ -76,13 +76,9 @@ function Clouds(Layer,map) {
   // Recent Weather Radar Imagery
   // Updated every 5 seconds, lasting several hours?
   // Reference: https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
-  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer", {
-    layers: '1',
-    format: 'image/png',
-    transparent: true,
-    attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
-    opacity: 0.5
-  }).addTo(map);
+  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer",
+    nowCOAST('1')
+  ).addTo(map);
 }
 function hazardHurricane(Layer,map) {
   // Watches, Warnings, and Track/Intensity Forecasts
@@ -95,7 +91,7 @@ function hazardHurricane(Layer,map) {
     "Forecast-Track, Eye and Cone": Layer.tileLayer.wms(hazXML, nowCOAST('9,8,6') ),
     "Siren Zone": Layer.tileLayer.wms(hazXML, nowCOAST('10') )
   };
-  Layer.control.layers(hazLayers,{},{collapsed:false,hideSingleBase:true}).addTo(map);
+  Layer.control.layers({},hazLayers,{collapsed:false,hideSingleBase:true,autoZIndex:false}).addTo(map);
   return hazLayers.Topography.addTo(map);
 }
 function epidemicCOVID(Layer,map) {
@@ -110,18 +106,18 @@ function weatherWarnings(Layer,map) {
   var hazLayers = {
     AirQuality: Layer.tileLayer.wms(hazXML, nowCOAST('2') ),
     Wildfire:   Layer.tileLayer.wms(hazXML, nowCOAST('5') ),
-    ExtremeTemperature:   Layer.tileLayer.wms(hazXML, nowCOAST('8') ),
-    FreezingDroplets:   Layer.tileLayer.wms(hazXML, nowCOAST('11') ),
+    ExtremeTemperature:Layer.tileLayer.wms(hazXML, nowCOAST('8') ),
+    FreezingDroplets:  Layer.tileLayer.wms(hazXML, nowCOAST('11') ),
     //FreezingSprayMaritime:   Layer.tileLayer.wms(hazXML, nowCOAST('14') ),
-    VisibilityLand:   Layer.tileLayer.wms(hazXML, nowCOAST('17') ),
-    //VisibilitySeas:   Layer.tileLayer.wms(hazXML, nowCOAST('21') ),
-    "Flooding":   Layer.tileLayer.wms(hazXML, nowCOAST('28,25') ),//25-Land,28-Coast
-    BeachHazCoast:   Layer.tileLayer.wms(hazXML, nowCOAST('32') ),
-    //BeachHazOcean:   Layer.tileLayer.wms(hazXML, nowCOAST('35') ),
+    VisibilityLand:Layer.tileLayer.wms(hazXML, nowCOAST('17') ),
+    //VisibilitySeas:Layer.tileLayer.wms(hazXML, nowCOAST('21') ),
+    "Flooding":    Layer.tileLayer.wms(hazXML, nowCOAST('28,25') ),//25-Land,28-Coast
+    BeachHazCoast: Layer.tileLayer.wms(hazXML, nowCOAST('32') ),
+    //BeachHazOcean: Layer.tileLayer.wms(hazXML, nowCOAST('35') ),
     WindLand:   Layer.tileLayer.wms(hazXML, nowCOAST('39') )
-    //WindSeas:   Layer.tileLayer.wms(hazXML, nowCOAST('42') )
+    //WindSeas:  Layer.tileLayer.wms(hazXML, nowCOAST('42') )
   };
-  Layer.control.layers(hazLayers,{},{collapsed:false}).addTo(map);
+  Layer.control.layers({},hazLayers,{collapsed:false}).addTo(map);
   return hazLayers.Topography.addTo(map);
 }
 function nowCOAST(Nq) {
@@ -130,9 +126,21 @@ function nowCOAST(Nq) {
     format: 'image/png',
     transparent: true,
     attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
-    opacity: 0.5,
+    opacity: 0.8,
     fillOpacity: 0.5
   }
+}
+
+function plotPolygon() {
+  //https://blog-en.openalfa.com/how-to-read-json-files-in-javascript
+  $.getJSON("./geo-counties-us.json", function(data) {
+    //$.getJSON("https://eric.clst.org/assets/wiki/uploads/Stuff/gz_2010_us_050_00_20m.json", function(data) {
+    L.geoJson(data,{
+      style:function(feature){
+        return {opacity:0.1,fillOpacity:0.05}
+      }
+    }).addTo(map);
+  });
 }
 
 const OffCenter = (c,y,x) => [c[0]+y,c[1]+x];

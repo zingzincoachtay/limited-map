@@ -3,9 +3,12 @@
 <head>
 <meta charset="utf-8">
 <title>Something Pretty</title>
+  <!-- Load jQuery from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
+  <!-- Load SheetJS from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+  <!-- Load Leaflet from CDN -->
   <link
   rel="stylesheet"
   href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
@@ -17,6 +20,9 @@
   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
   crossorigin=""
   ></script>
+  <!-- Load Esri Leaflet from CDN -->
+  <!-- See: http://esri.github.io/esri-leaflet/examples/ -->
+  <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
   <script src="./plot2map.js"></script>
   <script src="./plotCovidMap.js"></script>
   <style>
@@ -73,13 +79,21 @@
     var mHAGC = placeOrigin(epicenter,L,map),
         mHALF = placeOrigin(origins[1],L,map);
 
-    // /*
+     /*
     var now = new Date(); // Only show Weather Map occasionally...
     if( (now.getSeconds() % 5) )  wmsLayers('hurricane',L,map);
-    if( (now.getSeconds() % 7) )  wmsLayers('covid',L,map);
-    // */
+    //if( (now.getSeconds() % 7) )  wmsLayers('covid',L,map);
+     */
 
     map.on('click', onMapClick);
+
+    // Add the map data as an ESRI FeatureLayer
+    var cendata = L.esri.featureLayer({
+      url: "https://services9.arcgis.com/6Hv9AANartyT7fJW/arcgis/rest/services/USCounties_cases_V1/FeatureServer/0",
+      style: getStyle,
+      onEachFeature: onEachFeature
+    }).addTo(map);
+
   });
 </script>
 
