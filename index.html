@@ -18,6 +18,7 @@
   crossorigin=""
   ></script>
   <script src="./plot2map.js"></script>
+  <script src="./plotCovidMap.js"></script>
   <style>
   </style>
 </header>
@@ -40,9 +41,11 @@
       if( document.getElementById("map") ){
         var POI;
         markers.forEach((p,i) => {
-          POI = placeMarker({c:[p.Latitude,p.Longitude],name:p.Supplier},L,map);
+          POI = placeMarker({
+            c:[p.Latitude,p.Longitude],
+            name:p.Supplier+"<br>"+p.City+", "+p.State
+          },L,map);
           //&reg; &copy;
-          POI.bindPopup(p.Supplier+"<br>"+p.City+", "+p.State);
         });
       }
     }
@@ -67,15 +70,14 @@
       L.circle(epicenter.c,{radius:e,opacity:0.5,fillOpacity:0.05}).addTo(map)
     });
 
-    var mHAGC = placeOrigin(epicenter,L,map);
-    mHAGC.bindPopup(epicenter.name+"<BR>");
-    var mHALF = placeOrigin(origins[1],L,map);
-    mHALF.bindPopup(origins[1].name+"<BR>");
-    /*
+    var mHAGC = placeOrigin(epicenter,L,map),
+        mHALF = placeOrigin(origins[1],L,map);
+
+    // /*
     var now = new Date(); // Only show Weather Map occasionally...
-    if( (now.getSeconds() % 5) )  weatherLayer('hurricane',L,map);
-    if( (now.getSeconds() % 7) )  weatherLayer('covid',L,map);
-    */
+    if( (now.getSeconds() % 5) )  wmsLayers('hurricane',L,map);
+    if( (now.getSeconds() % 7) )  wmsLayers('covid',L,map);
+    // */
 
     map.on('click', onMapClick);
   });

@@ -14,16 +14,19 @@ function DrawBaseMapLayer(Layer,map){
 }
 function placeOrigin(x,Layer,map){
   Layer.Icon.Default.prototype.options.iconSize = [20,30];
-  return Layer.marker(x.c,{
+  // Choose mouseover popup versus onclick popup
+  var p = Layer.marker(x.c,{
+    //"title" : x.name,
     "keyboard" : true,
-    "title" : x.name,
     "zIndexOffset":x.z}).addTo(map);
+  return p.bindPopup(x.name+"<BR>");
 }
 function placeMarker(x,Layer,map){
-  return Layer.marker(x.c,{
-    "keyboard" : false,
-    "title" : x.name
+  var p = Layer.marker(x.c,{
+    //"title" : x.name, // enable a mouseover popup
+    "keyboard" : false
   }).addTo(map);
+  return p.bindPopup(x.name+"<BR>");
 }
 function onMapClick(e){
   if( typeof markers === 'undefined' ){
@@ -57,21 +60,23 @@ function nearby(d){
   });
   return recent;
 }
-function weatherLayer(phenom,L,map) {
-  // I drew the data from U.S. Geological Survey.
+function wmsLayers(phenom,L,map) {
+  // Pulling data from NOAA and USGS
+  // https://viewer.nationalmap.gov/services/
+  // https://www.weather.gov/gis/WebServices
   // https://nowcoast.noaa.gov/help/#!section=map-service-list
-  // Go to Capability > Layer > Layer queryable="?" to find the layer name to parse.
+  // Go to Capability > Layer > Layer > Name to find the layer name to parse.
 
   Clouds(L,map);
-  if( /^warning$/i.test(phenom) ) weatherWarnings(L,map);
   if( /^hurricane$/i.test(phenom) ) hazardHurricane(L,map);
-  if( /^covid$/i.test(phenom) ) hazardHurricane(L,map);
+  if( /^warnings$/i.test(phenom) ) weatherWarnings(L,map);
+  if( /^covid$/i.test(phenom) ) epidemicCOVID(L,map);
 }
 function Clouds(Layer,map) {
   // Recent Weather Radar Imagery
   // Updated every 5 seconds, lasting several hours?
   // Reference: https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
-  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?", {
+  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer", {
     layers: '1',
     format: 'image/png',
     transparent: true,
@@ -82,24 +87,52 @@ function Clouds(Layer,map) {
 function hazardHurricane(Layer,map) {
   // Watches, Warnings, and Track/Intensity Forecasts
   // https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
-  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer?", {
-    layers: '1',
-    format: 'image/png',
-    transparent: true,
-    attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
-    opacity: 0.5
-  }).addTo(map);
+  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer";
+  var hazLayers = {
+    //SurfaceWindSwath:   Layer.tileLayer.wms(hazXML, nowCOAST('2') ),
+    //ForecastWindExtent: Layer.tileLayer.wms(hazXML, nowCOAST('7') ),
+    "Observed-Track and Eye": Layer.tileLayer.wms(hazXML, nowCOAST('4,3') ),
+    "Forecast-Track, Eye and Cone": Layer.tileLayer.wms(hazXML, nowCOAST('9,8,6') ),
+    "Siren Zone": Layer.tileLayer.wms(hazXML, nowCOAST('10') )
+  };
+  Layer.control.layers(hazLayers,{},{collapsed:false,hideSingleBase:true}).addTo(map);
+  return hazLayers.Topography.addTo(map);
+}
+function epidemicCOVID(Layer,map) {
+  // https://github.com/dlab-geo/webmaps/blob/master/covid-19/covid-js.html
+  // https://dlab-geo.github.io/webmaps/covid-19/covid-js.html
 }
 function weatherWarnings(Layer,map) {
   // Long-Duration Hazards (e.g. Inland & Coastal Flooding/High Winds/High Seas)
   // https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
-  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/WMSServer?", {
-    layers: '1',
+  // From the Map Information: "dissolved polygon layers should be used when requesting a map image"
+  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/WMSServer";
+  var hazLayers = {
+    AirQuality: Layer.tileLayer.wms(hazXML, nowCOAST('2') ),
+    Wildfire:   Layer.tileLayer.wms(hazXML, nowCOAST('5') ),
+    ExtremeTemperature:   Layer.tileLayer.wms(hazXML, nowCOAST('8') ),
+    FreezingDroplets:   Layer.tileLayer.wms(hazXML, nowCOAST('11') ),
+    //FreezingSprayMaritime:   Layer.tileLayer.wms(hazXML, nowCOAST('14') ),
+    VisibilityLand:   Layer.tileLayer.wms(hazXML, nowCOAST('17') ),
+    //VisibilitySeas:   Layer.tileLayer.wms(hazXML, nowCOAST('21') ),
+    "Flooding":   Layer.tileLayer.wms(hazXML, nowCOAST('28,25') ),//25-Land,28-Coast
+    BeachHazCoast:   Layer.tileLayer.wms(hazXML, nowCOAST('32') ),
+    //BeachHazOcean:   Layer.tileLayer.wms(hazXML, nowCOAST('35') ),
+    WindLand:   Layer.tileLayer.wms(hazXML, nowCOAST('39') )
+    //WindSeas:   Layer.tileLayer.wms(hazXML, nowCOAST('42') )
+  };
+  Layer.control.layers(hazLayers,{},{collapsed:false}).addTo(map);
+  return hazLayers.Topography.addTo(map);
+}
+function nowCOAST(Nq) {
+  return {
+    layers: Nq,
     format: 'image/png',
     transparent: true,
     attribution: "NOAA/NOS/OCS nowCOAST, NOAA/NWS and NOAA/OAR/NSSL",
-    opacity: 0.5
-  }).addTo(map);
+    opacity: 0.5,
+    fillOpacity: 0.5
+  }
 }
 
 const OffCenter = (c,y,x) => [c[0]+y,c[1]+x];

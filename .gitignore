@@ -35,6 +35,6 @@ inc/
 /*.zip
 
 *.xlsx
-*.json
-*.geojson
 *.htm
+*.csv
+*.geojson
