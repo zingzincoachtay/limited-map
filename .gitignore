@@ -38,3 +38,4 @@ inc/
 *.htm
 *.csv
 *.geojson
+*.jquery
