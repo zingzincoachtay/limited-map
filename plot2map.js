@@ -19,14 +19,16 @@ function placeOrigin(x,Layer,map){
     //"title" : x.name,
     "keyboard" : true,
     "zIndexOffset":x.z}).addTo(map);
-  return p.bindPopup(x.name+"<BR>");
+  return p.bindPopup(x.name+"<BR>",{autoClose:true});
+  //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
 }
 function placeMarker(x,Layer,map){
   var p = Layer.marker(x.c,{
     //"title" : x.name, // enable a mouseover popup
     "keyboard" : false
   }).addTo(map);
-  return p.bindPopup(x.name+"<BR>");
+  return p.bindPopup(x.name+"<BR>",{autoClose:true});
+  //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
 }
 function onMapClick(e){
   if( typeof markers === 'undefined' ){
