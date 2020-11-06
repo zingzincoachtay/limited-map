@@ -42,9 +42,14 @@ function onMapClick(e){
       .openOn(map);
   }
 }
+function donotrepeat(o) {
+  var strExists = {}; strExists[o.name] = true;
+  return ( strExists[this] ) ? true : false;
+}
 function distancesOf(origin){
   var BigD = [];
   for(m of markers){
+    if( BigD.find(donotrepeat,m) ) continue;
     var LittleD = unit_great_circle_distance(
       {Lat:origin[0],Lon:origin[1]},
       {Lat:m.Latitude,Lon:m.Longitude}
