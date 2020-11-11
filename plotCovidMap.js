@@ -3,13 +3,13 @@ var sn_val = "Confirmed";
 var covid19colors = {
   Confirmed: ['#bd0026','#f03b20','#fd8d3c','#fecc5c','#ffffb2'],
   Deaths: ['#980043','#dd1c77','#df65b0','#d7b5d8','#f1eef6'],
-  FatalityRate: ['#980043','#dd1c77','#df65b0','#d7b5d8','#f1eef6']
+  FatalityRa: ['#980043','#dd1c77','#df65b0','#d7b5d8','#f1eef6']
 }
 // set up custom breaks for each mapped attribute
 var covid19breaks = {
   Confirmed: [1000, 500, 100, 1, 0],
   Deaths: [500, 100, 50, 1, 0],
-  FatalityRate: [5,4,2,1,0]
+  FatalityRa: [5,4,2,1,0]
 }
 //set up custom popup template strings for each mapped attribute (UGLY LONG STRINGS)
 var popup_strings = {
@@ -40,7 +40,6 @@ function getColor(d, v) {
 }
 function highlightFeature(e) {
   var covid = e.target;
-
   covid.setStyle({
     //weight: 2.5,
     color: '#555',
