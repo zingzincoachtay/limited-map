@@ -19,7 +19,7 @@ function placeOrigin(x,Layer,map){
     //"title" : x.name,
     "keyboard" : true,
     "zIndexOffset":x.z}).addTo(map);
-  return p.bindPopup(x.name+"<BR>",{autoClose:true});
+  return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
 }
 function placeMarker(x,Layer,map){
@@ -27,15 +27,17 @@ function placeMarker(x,Layer,map){
     //"title" : x.name, // enable a mouseover popup
     "keyboard" : false
   }).addTo(map);
-  return p.bindPopup(x.name+"<BR>",{autoClose:true});
+  return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
 }
 function onMapClick(e){
   if( typeof markers === 'undefined' ){
+    // /*
     L.popup()
       .setLatLng(e.latlng)
       .setContent("Clicked on "+ e.latlng.toString())
       .openOn(map);
+    // */
   } else {
     var nearbyMarkers = distancesOf([e.latlng.lat,e.latlng.lng]);
     L.popup()
