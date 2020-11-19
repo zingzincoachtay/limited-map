@@ -26,6 +26,12 @@
   <script src="https://unpkg.com/esri-leaflet@2.5.0/dist/esri-leaflet.js"
     integrity="sha512-ucw7Grpc+iEQZa711gcjgMBnmd9qju1CICsRaryvX7HJklK0pGl/prxKvtHwpgm5ZHdvAil7YPxI1oWPOWK3UQ=="
     crossorigin=""></script>
+
+  <script language="javascript">
+    const undupe = (value, index, self) => {
+      return self.indexOf(value) === index;
+    }
+  </script>
   <script src="./plot2map.js"></script>
   <script src="./plotCovidMap.js"></script>
   <style>
@@ -50,21 +56,42 @@
       // Alternative, retrieve the output JSON from the field?
       // Plot only occurs when the data is loaded anyways.
       markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
-      if( document.getElementById("map") ){
-        var POI;
-        markers.forEach((p,i) => {
-          POI = placeMarker({
+      //var POI=new Set(), BOM=new Set();
+      var POI=new Set(), BOM=[];
+      if( typeof markers !== 'undefined' ){
+        for(p of markers){
+          POI.add({
             c:[p.Latitude,p.Longitude],
             name:p.Supplier+"<br>"+p.City+", "+p.State
-          },L,map);
+          });
+          BOM.push(p.Supplier);
+        }
+      }
+      if( document.getElementById("map") ){
+        POI.forEach((p,i) => {
+          placeMarker(p,L,map);
           //&reg; &copy;
         });
+      }
+      if( document.getElementById("search") ){
+        BOM = BOM.filter(undupe);
+        var sel = document.getElementById("search");
+        var opt;
+        for(b of BOM.sort() ){
+          opt = document.createElement("option");
+          opt.text = b;
+          sel.options.add(opt);
+        }
       }
     }
   });
 </script>
 
-<div id="map" style="width:960px;height:720px;"></div>
+<div id="map" style="width:960px;height:720px;float:left;"></div>
+<div id="Active" style="width:20%;height:720px;float:left;background-color:#ccc;">
+  <select id="search" onChange="javascript:regurgitate(this.value)">
+  </select>
+</div>
 <script type="text/javascript">
   //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
   var epicenter = origins[0];
@@ -87,20 +114,18 @@
     var mHAGC = placeOrigin(epicenter,L,map),
         mHALF = placeOrigin(origins[1],L,map);
 
-     /*
-    var now = new Date(); // Only show Weather Map occasionally...
-    if( (now.getSeconds() % 5) )  hazardLayers('hurricane',L,map);
-    // Add the map data as an ESRI FeatureLayer
-    if( (now.getSeconds() % 7) )  hazardLayers('covid',L,map);
-     */
-
     map.on('click', onMapClick);
+
+    hazardLayers('',L,map);
 
   });
 
 </script>
 
 <script language="javascript">
+function setCOVIDmap(N){
+  sn_val = (N==3) ? "FatalityRa" : (N==2) ? "Deaths" : "Confirmed";
+}
 </script>
 
 </body>

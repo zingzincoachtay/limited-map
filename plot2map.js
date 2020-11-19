@@ -75,21 +75,40 @@ function hazardLayers(phenom,L,map) {
   // https://www.weather.gov/gis/WebServices
   // https://nowcoast.noaa.gov/help/#!section=map-service-list
   // Go to Capability > Layer > Layer > Name to find the layer name to parse.
+  var hazLayers = Object.assign(
+    Clouds(L,map)
+    ,hazardHurricane(L,map)
+    ,weatherWarnings(L,map)
+    ,epidemicCOVID(L,map)
+  );
 
-  Clouds(L,map);
-  if( /^hurricane$/i.test(phenom) ) hazardHurricane(L,map);
-  if( /^warnings$/i.test(phenom) ) weatherWarnings(L,map);
-  if( /^covid$/i.test(phenom) ) epidemicCOVID(L,map);
+  L.control.layers({},hazLayers,{collapsed:true,hideSingleBase:false,autoZIndex:false,position:"bottomleft"}).addTo(map);
+  return hazLayers.Topography.addTo(map);
 }
 function Clouds(Layer,map) {
+  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer";
+  return {
+    "Clouds" : Layer.tileLayer.wms(hazXML, nowCOAST('1') )
+  };
+}
+function Clouds2(Layer,map) {
   // Recent Weather Radar Imagery
   // Updated every 5 seconds, lasting several hours?
   // Reference: https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
-  return Layer.tileLayer.wms("https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer",
-    nowCOAST('1')
-  ).addTo(map);
+  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer";
+  return Layer.tileLayer.wms(hazXML, nowCOAST('1') ).addTo(map);
 }
 function hazardHurricane(Layer,map) {
+  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer";
+  return {
+    //SurfaceWindSwath:   Layer.tileLayer.wms(hazXML, nowCOAST('2') ),
+    //ForecastWindExtent: Layer.tileLayer.wms(hazXML, nowCOAST('7') ),
+    "Observed-Track and Eye": Layer.tileLayer.wms(hazXML, nowCOAST('4,3') ),
+    "Forecast-Track, Eye and Cone": Layer.tileLayer.wms(hazXML, nowCOAST('9,8,6') ),
+    "Siren Zone": Layer.tileLayer.wms(hazXML, nowCOAST('10') )
+  };
+}
+function hazardHurricane2(Layer,map) {
   // Watches, Warnings, and Track/Intensity Forecasts
   // https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
   var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer";
@@ -103,65 +122,24 @@ function hazardHurricane(Layer,map) {
   Layer.control.layers({},hazLayers,{collapsed:false,hideSingleBase:true,autoZIndex:false}).addTo(map);
   return hazLayers.Topography.addTo(map);
 }
-function epidemicCOVID(Layer,map) {
-  // See: https://dlab.berkeley.edu/blog/data-and-tools-mapping-covid-19
-  // See: http://esri.github.io/esri-leaflet/examples/
-  // See: https://dlab-geo.github.io/webmaps/covid-19/covid-js.html
-  // See: https://github.com/dlab-geo/webmaps/blob/master/covid-19/covid-js.html
-  // /*
-  var cendata = L.esri.featureLayer({
-    url: "https://services9.arcgis.com/6Hv9AANartyT7fJW/arcgis/rest/services/USCounties_cases_V1/FeatureServer/0",
-    style: getStyle,
-    onEachFeature: onEachFeature
-  }).bindPopup(PopupCOVID).addTo(map);// Can add bindPopup with featureLayer
-  // Set the default style for the polygons
-  // Not sure why getStyle is called here for the second time.
-  //   >> Comment out for the moment until I figure out.
-  //cendata.setStyle(getStyle);
-  // Set the default popup template
-  //cendata.bindPopup(PopupCOVID);
-  // */
-  /* // Not a problem with the Layer Control. The global variables do not change when selecting layers.
-  sn_val = "Confirmed";
-  var mConfirmed = L.esri.featureLayer({
-    url: "https://services9.arcgis.com/6Hv9AANartyT7fJW/arcgis/rest/services/USCounties_cases_V1/FeatureServer/0",
-    style: getStyle,
-    onEachFeature: onEachFeature
-  }).bindPopup(PopupCOVID);
-  sn_val = "Deaths";
-  var mDeaths = L.esri.featureLayer({
-    url: "https://services9.arcgis.com/6Hv9AANartyT7fJW/arcgis/rest/services/USCounties_cases_V1/FeatureServer/0",
-    style: getStyle,
-    onEachFeature: onEachFeature
-  }).bindPopup(PopupCOVID);
-  sn_val = "FatalityRa";
-  var mFatalityRa = L.esri.featureLayer({
-    url: "https://services9.arcgis.com/6Hv9AANartyT7fJW/arcgis/rest/services/USCounties_cases_V1/FeatureServer/0",
-    style: getStyle,
-    onEachFeature: onEachFeature
-  }).bindPopup(PopupCOVID);
-  var hazLayers = {
-    "Confirmed" : mConfirmed,
-    "Deaths" : mDeaths,
-    "FatalityRa" : mFatalityRa
-  }
-  Layer.control.layers({},hazLayers,{collapsed:false,hideSingleBase:true,autoZIndex:false}).addTo(map);
-  return hazLayers.Topography.addTo(map);
-  */
-}
-function PopupCOVID(e){
-  //uncomment and click on  a feature in the map to see all available fields you can add top popup
-  //console.log(e.feature.properties)
-
-  // Note we could just pass in e.features.properties to L.Util.template but we do not
-  // so that we can format the number of significant digits displayed for the Fatality Rate (FatalityRate)
-  //return L.Util.template(popup_strings[sn_val], e.feature.properties);
-  x = e.feature.properties;
-  return L.Util.template(popup_strings[sn_val], {
-    Countyname: x.Countyname, ST_Abbr: x.ST_Abbr, Confirmed: x.Confirmed, Deaths: x.Deaths, FatalityRa: x.FatalityRa.toFixed(1), url: x.url, DateChecke: x.DateChecke
-  });
-}
 function weatherWarnings(Layer,map) {
+  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/WMSServer";
+  return {
+    AirQuality: Layer.tileLayer.wms(hazXML, nowCOAST('2') ),
+    Wildfire:   Layer.tileLayer.wms(hazXML, nowCOAST('5') ),
+    ExtremeTemperature:Layer.tileLayer.wms(hazXML, nowCOAST('8') ),
+    FreezingDroplets:  Layer.tileLayer.wms(hazXML, nowCOAST('11') ),
+    //FreezingSprayMaritime:   Layer.tileLayer.wms(hazXML, nowCOAST('14') ),
+    VisibilityLand:Layer.tileLayer.wms(hazXML, nowCOAST('17') ),
+    //VisibilitySeas:Layer.tileLayer.wms(hazXML, nowCOAST('21') ),
+    "Flooding":    Layer.tileLayer.wms(hazXML, nowCOAST('28,25') ),//25-Land,28-Coast
+    BeachHazCoast: Layer.tileLayer.wms(hazXML, nowCOAST('32') ),
+    //BeachHazOcean: Layer.tileLayer.wms(hazXML, nowCOAST('35') ),
+    WindLand:   Layer.tileLayer.wms(hazXML, nowCOAST('39') )
+    //WindSeas:  Layer.tileLayer.wms(hazXML, nowCOAST('42') )
+  };
+}
+function weatherWarnings2(Layer,map) {
   // Long-Duration Hazards (e.g. Inland & Coastal Flooding/High Winds/High Seas)
   // https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
   // From the Map Information: "dissolved polygon layers should be used when requesting a map image"
@@ -192,18 +170,6 @@ function nowCOAST(Nq) {
     opacity: 0.8,
     fillOpacity: 0.5
   }
-}
-
-function plotPolygon() {
-  //https://blog-en.openalfa.com/how-to-read-json-files-in-javascript
-  $.getJSON("./geo-counties-us.json", function(data) {
-    //$.getJSON("https://eric.clst.org/assets/wiki/uploads/Stuff/gz_2010_us_050_00_20m.json", function(data) {
-    L.geoJson(data,{
-      style:function(feature){
-        return {opacity:0.1,fillOpacity:0.05}
-      }
-    }).addTo(map);
-  });
 }
 
 const OffCenter = (c,y,x) => [c[0]+y,c[1]+x];

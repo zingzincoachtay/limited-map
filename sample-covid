@@ -61,7 +61,7 @@
       <select id="sn">
         <option value='Confirmed' selected="selected">Confirmed Cases</option>
         <option value='Deaths'>Deaths</option>
-        <option value='FatalityRate'>Fatality Rate</option>
+        <option value='FatalityRa'>Fatality Rate</option>
       </select>
     </label>
   </div>
@@ -75,21 +75,21 @@ var sn_val = 'Confirmed'; //options: Confirmed, Deaths
 var mycolors = {
   Confirmed: ['#bd0026','#f03b20','#fd8d3c','#fecc5c','#ffffb2'],
   Deaths: ['#980043','#dd1c77','#df65b0','#d7b5d8','#f1eef6'],
-  FatalityRate: ['#980043','#dd1c77','#df65b0','#d7b5d8','#f1eef6']
+  FatalityRa: ['#980043','#dd1c77','#df65b0','#d7b5d8','#f1eef6']
 }
 
 // set up custom breaks for each mapped attribute
 var mybreaks = {
   Confirmed: [1000, 500, 100, 1, 0],
   Deaths: [500, 100, 50, 1, 0],
-  FatalityRate: [5,4,2,1,0]
+  FatalityRa: [5,4,2,1,0]
 }
 
 //set up custom popup template strings for each mapped attribute (UGLY LONG STRINGS)
 var popup_strings = {
   Confirmed:  '<h3>{Countyname} County, {ST_Abbr}</h3><hr>Confirmed Cases: {Confirmed}</br>Deaths: {Deaths}<br> <a href="{url}" target="_blank">View Status Report</a> <p><em>last updated: {DateChecke}</em></p>',
   Deaths:  '<h3>{Countyname} County, {ST_Abbr}</h3><hr>Confirmed Cases: {Confirmed}</br> Deaths: {Deaths}<br> <a href="{url}" target="_blank">View County Status Report</a> <p><em>last updated: {DateChecke}</em></p>',
-  FatalityRate:  '<h3>{Countyname} County, {ST_Abbr}</h3><hr>Fatality Rate: {FatalityRate}% </br>Confirmed Cases: {Confirmed}</br> Deaths: {Deaths}<br> <a href="{url}" target="_blank">View County Status Report</a> <p><em>last updated: {DateChecke}</em></p>',
+  FatalityRa:  '<h3>{Countyname} County, {ST_Abbr}</h3><hr>Fatality Rate: {FatalityRa}% </br>Confirmed Cases: {Confirmed}</br> Deaths: {Deaths}<br> <a href="{url}" target="_blank">View County Status Report</a> <p><em>last updated: {DateChecke}</em></p>',
 }
 
 function getStyle(feature) {
@@ -171,11 +171,11 @@ cendata.bindPopup(function(e){
   //console.log(e.feature.properties)
 
   // Note we could just pass in e.features.properties to L.Util.template but we do not
-  // so that we can format the number of significant digits displayed for the Fatality Rate (FatalityRate)
+  // so that we can format the number of significant digits displayed for the Fatality Rate (FatalityRa)
   //return L.Util.template(popup_strings[sn_val], e.feature.properties);
 
   x= e.feature.properties;
-  temp = {Countyname: x.Countyname, ST_Abbr: x.ST_Abbr, Confirmed: x.Confirmed, Deaths: x.Deaths, FatalityRate: x.FatalityRate.toFixed(1), url: x.url, DateChecke: x.DateChecke} ;
+  temp = {Countyname: x.Countyname, ST_Abbr: x.ST_Abbr, Confirmed: x.Confirmed, Deaths: x.Deaths, FatalityRa: x.FatalityRa.toFixed(1), url: x.url, DateChecke: x.DateChecke} ;
   return L.Util.template(popup_strings[sn_val], temp);
 });
 
@@ -199,7 +199,7 @@ sn.addEventListener('change', function(){
   cendata.bindPopup(function(e){
     x= e.feature.properties;
     console.log(x)
-    temp = {Countyname: x.Countyname, ST_Abbr: x.ST_Abbr, Confirmed: x.Confirmed, Deaths: x.Deaths, FatalityRate: x.FatalityRate.toFixed(1), url: x.url, DateChecke: x.DateChecke} ;
+    temp = {Countyname: x.Countyname, ST_Abbr: x.ST_Abbr, Confirmed: x.Confirmed, Deaths: x.Deaths, FatalityRa: x.FatalityRa.toFixed(1), url: x.url, DateChecke: x.DateChecke} ;
     //return L.Util.template(popup_strings[sn_val], e.feature.properties);
     return L.Util.template(popup_strings[sn_val], temp);
   });
