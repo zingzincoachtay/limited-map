@@ -1,4 +1,5 @@
-var map,L,markers;
+var map,L;
+var markers, POI=new Set(), BOM=[];//
 var leafletmaplayer = 'map';
 var origins = [
   {"c":[39.640784,-86.831823],"z":1000,"name":"Heartland Automotive"},
@@ -32,12 +33,10 @@ function placeMarker(x,Layer,map){
 }
 function onMapClick(e){
   if( typeof markers === 'undefined' ){
-    // /*
     L.popup()
       .setLatLng(e.latlng)
       .setContent("Clicked on "+ e.latlng.toString())
       .openOn(map);
-    // */
   } else {
     var nearbyMarkers = distancesOf([e.latlng.lat,e.latlng.lng]);
     L.popup()
@@ -46,19 +45,28 @@ function onMapClick(e){
       .openOn(map);
   }
 }
-function donotrepeat(o) {
-  var strExists = {}; strExists[o.name] = true;
-  return ( strExists[this] ) ? true : false;
+function isShorter(v,o) {
+  o.forEach((item, i) => {
+    if( v>item.span ) return false;
+  });
+  return true;
+}
+function isUnique(v,o) {
+  o.forEach((item, i) => {
+    if( v==item.name ) return false;
+  });
+  return true;
 }
 function distancesOf(origin){
   var BigD = [];
   for(m of markers){
-    if( BigD.find(donotrepeat,m) ) continue;
+    if( !isUnique(od,BigD) ) continue;
     var LittleD = unit_great_circle_distance(
       {Lat:origin[0],Lon:origin[1]},
       {Lat:m.Latitude,Lon:m.Longitude}
     );
-    BigD.push({name:m.Supplier,span:LittleD});
+    if( isShorter(od,BigD) )
+      BigD.push({name:m.Supplier,span:LittleD});
   }
   return nearby( [...new Set(BigD)] );
 }

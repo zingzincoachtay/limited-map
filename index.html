@@ -50,42 +50,39 @@
     reader.onload = function(e){
       var data = new Uint8Array(reader.result);
       var workbook = XLSX.read(data,{type:'array'});
-      // Store in global variable
+      // Store in global variables - markers, POI, BOM
       // Alternative, retrieve the output JSON from the field?
       // Plot only occurs when the data is loaded anyways.
       markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
-      //var POI=new Set(), BOM=new Set();
-      var POI=new Set(), BOM=[];
-      if( typeof markers !== 'undefined' ){
-        for(p of markers){
-          POI.add({
-            c:[p.Latitude,p.Longitude],
-            name:p.Supplier+"<br>"+p.City+", "+p.State
-          });
-          BOM.push(p.Supplier);
-        }
-        const ySO = document.createElement("SELECT");
-        ySO.setAttribute("id","search");
-        ySO.setAttribute("style","width:100%");
-        ySO.setAttribute("onChange","javascript:regurgitate(this.value)");
-        document.getElementById("Active").appendChild(ySO);
-        const yTA = document.createElement("TEXTAREA");
-        yTA.setAttribute("id","basic");
-        yTA.setAttribute("rows","9");
-        yTA.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
-        document.getElementById("Active").appendChild(yTA);
-      }
-      if( document.getElementById("map") ){
-        POI.forEach((p,i) => {
-          placeMarker(p,L,map);
-          //&reg; &copy;
+      for(p of markers){
+        POI.add({
+          c:[p.Latitude,p.Longitude],
+          name:p.Supplier+"<br>"+p.City+", "+p.State
         });
+        BOM.push(p.Supplier);
       }
-      if( document.getElementById("search") ){
-        BOM = BOM.filter(undupe);
+      if( POI.size>0 )  //&reg; &copy;
+        POI.forEach((p,i) => placeMarker(p,L,map));
+      if( BOM.length>0 ){
+        const ySO = document.createElement("SELECT");
+          ySO.setAttribute("id","search");
+          ySO.setAttribute("style","width:100%");
+          ySO.setAttribute("onChange","javascript:regurgitate(this.value)");
+          document.getElementById("Active").appendChild(ySO);
+        const yTA = document.createElement("TEXTAREA");
+          yTA.setAttribute("id","basic");
+          yTA.setAttribute("rows","9");
+          yTA.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
+          document.getElementById("Active").appendChild(yTA);
+        const yPN = document.createElement("TEXTAREA");
+          yPN.setAttribute("id","parts");
+          yPN.setAttribute("rows","19");
+          yPN.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
+          document.getElementById("Active").appendChild(yPN);
+        BOM = BOM.filter(undupe).sort();
         var sel = document.getElementById("search");
         var opt;
-        for(b of BOM.sort() ){
+        for(b of BOM){
           opt = document.createElement("option");
           opt.text = b;
           sel.options.add(opt);
@@ -101,7 +98,8 @@
 <script type="text/javascript">
   //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
   var epicenter = origins[0];
-  $(document).ready(function() {
+  //Discussion of efficiency: https://api.jquery.com/ready/
+  $(function() {
     // Made this variable global, so onChange event can use the map reference
     map = L.map('map',{ // Can't bake into Class because of 'map' field
       scrollWheelZoom : true,
