@@ -28,8 +28,8 @@
     crossorigin=""></script>
 
   <script language="javascript">
-    const undupe = (value, index, self) => self.indexOf(value) === index;
   </script>
+  <script src="./main.js"></script>
   <script src="./plot2map.js"></script>
   <script src="./plotCovidMap.js"></script>
   <style>
@@ -54,15 +54,18 @@
       // Alternative, retrieve the output JSON from the field?
       // Plot only occurs when the data is loaded anyways.
       markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
-      for(p of markers){
+      sourcing = XLSX.utils.sheet_to_json(workbook.Sheets["MASTER"]);
+      for(s of markers){
         POI.add({
-          c:[p.Latitude,p.Longitude],
-          name:p.Supplier+"<br>"+p.City+", "+p.State
+          c:[s.Latitude,s.Longitude],
+          name:s.POI+"<br>"+s.City+", "+s.State
         });
-        BOM.push(p.Supplier);
+        BOM.push(s.POI);
       }
-      if( POI.size>0 )  //&reg; &copy;
-        POI.forEach((p,i) => placeMarker(p,L,map));
+      for(p of sourcing){
+
+      }
+      POI.forEach((p,i) => placeMarker(p,L,map));//&reg; &copy;
       if( BOM.length>0 ){
         const ySO = document.createElement("SELECT");
           ySO.setAttribute("id","search");
@@ -76,17 +79,13 @@
           document.getElementById("Active").appendChild(yTA);
         const yPN = document.createElement("TEXTAREA");
           yPN.setAttribute("id","parts");
-          yPN.setAttribute("rows","19");
+          yPN.setAttribute("rows","29");
           yPN.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
           document.getElementById("Active").appendChild(yPN);
         BOM = BOM.filter(undupe).sort();
-        var sel = document.getElementById("search");
-        var opt;
-        for(b of BOM){
-          opt = document.createElement("option");
-          opt.text = b;
-          sel.options.add(opt);
-        }
+        document.getElementById("search").options.add( addOption("") );
+        for(b of BOM)
+          document.getElementById("search").options.add( addOption(b) );
       }
     }
   });
@@ -127,23 +126,27 @@
 </script>
 
 <script language="javascript">
-function setCOVIDmap(N){
-  sn_val = (N==3) ? "FatalityRa" : (N==2) ? "Deaths" : "Confirmed";
-}
 function regurgitate(e){
-  for(row of markers){
-    if(row.Supplier==e){
+  for(rowM of markers){
+    if(rowM.POI==e){
       document.getElementById("basic").value = `
-Company\t`+row.Supplier+`
-Address\t`+row["Street, Suite, Bldg"]+`
-\t`+row.City+`, `+row.State+` `+row.Zip+`
-\t`+row.Country+`
+Company\t`+rowM.POI+`
+Address\t`+rowM["Street, Suite, Bldg"]+`
+\t`+rowM.City+`, `+rowM.State+` `+rowM.Zip+`
+\t`+rowM.Country+`
 
-Distance\t`+row.Physical+`
-Driving Time\t`+row["Drive Time (clock)"];
+Distance\t`+rowM.Driving+` mile(s)
+Driving Time\t`+rowM["Drive Time (clock)"];
       break;
     }
   }
+  document.getElementById('parts').value = `
+Parts\t\t\tUnit Price`;
+  for(rowP of sourcing){
+    if(rowP.Vendor==e)
+      document.getElementById('parts').value += "\n"+rowP["Item Number"]+"\t\t$ "+(rowP["Price"]*1).toFixed(4);
+  }
+  return 1;
 }
 </script>
 

@@ -1,6 +1,6 @@
 var map,L;
-var markers, POI=new Set(), BOM=[];//
-var leafletmaplayer = 'map';
+var POI=new Set(), BOM=[];//
+//var leafletmaplayer = 'map';
 var origins = [
   {"c":[39.640784,-86.831823],"z":1000,"name":"Heartland Automotive"},
   {"c":[40.363639,-86.835809],"z":999,"name":"Heartland Automotive - Lafayette"}
@@ -30,52 +30,6 @@ function placeMarker(x,Layer,map){
   }).addTo(map);
   return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
-}
-function onMapClick(e){
-  if( typeof markers === 'undefined' ){
-    L.popup()
-      .setLatLng(e.latlng)
-      .setContent("Clicked on "+ e.latlng.toString())
-      .openOn(map);
-  } else {
-    var nearbyMarkers = distancesOf([e.latlng.lat,e.latlng.lng]);
-    L.popup()
-      .setLatLng(e.latlng)
-      .setContent("Clicked near " + nearbyMarkers.name)
-      .openOn(map);
-  }
-}
-function isShorter(v,o) {
-  o.forEach((item, i) => {
-    if( v>item.span ) return false;
-  });
-  return true;
-}
-function isUnique(v,o) {
-  o.forEach((item, i) => {
-    if( v==item.name ) return false;
-  });
-  return true;
-}
-function distancesOf(origin){
-  var BigD = [];
-  for(m of markers){
-    if( !isUnique(od,BigD) ) continue;
-    var LittleD = unit_great_circle_distance(
-      {Lat:origin[0],Lon:origin[1]},
-      {Lat:m.Latitude,Lon:m.Longitude}
-    );
-    if( isShorter(od,BigD) )
-      BigD.push({name:m.Supplier,span:LittleD});
-  }
-  return nearby( [...new Set(BigD)] );
-}
-function nearby(d){
-  var recent = d.pop();
-  d.forEach((gcd, i) => {
-    if(recent.span>gcd.span)  recent = gcd;
-  });
-  return recent;
 }
 function hazardLayers(phenom,L,map) {
   // Pulling data from NOAA and USGS
