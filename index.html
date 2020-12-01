@@ -54,45 +54,47 @@
       // Alternative, retrieve the output JSON from the field?
       // Plot only occurs when the data is loaded anyways.
       markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
-      sourcing = XLSX.utils.sheet_to_json(workbook.Sheets["MASTER"]);
+      sources = XLSX.utils.sheet_to_json(workbook.Sheets["MASTER"]);
       for(s of markers){
         POI.add({
           c:[s.Latitude,s.Longitude],
           name:s.POI+"<br>"+s.City+", "+s.State
         });
-        BOM.push(s.POI);
+        BOM[s.POI] = [s.Latitude,s.Longitude];
       }
-      for(p of sourcing){
+      for(p of sources){
 
       }
       POI.forEach((p,i) => placeMarker(p,L,map));//&reg; &copy;
-      if( BOM.length>0 ){
-        const ySO = document.createElement("SELECT");
-          ySO.setAttribute("id","search");
-          ySO.setAttribute("style","width:100%");
-          ySO.setAttribute("onChange","javascript:regurgitate(this.value)");
-          document.getElementById("Active").appendChild(ySO);
+      if( Object.keys(BOM).length>0 ){
+        const ySO = $("<SELECT>");
+          ySO.attr({
+            "id":"search",
+            "style":"width:100%",
+            "onChange":"javascript:regurgitate()"
+          }); $("#Active").append(ySO);
         const yTA = document.createElement("TEXTAREA");
           yTA.setAttribute("id","basic");
           yTA.setAttribute("rows","9");
           yTA.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
-          document.getElementById("Active").appendChild(yTA);
+          $("#Active").append(yTA);
+          //document.getElementById("Active").appendChild(yTA);
         const yPN = document.createElement("TEXTAREA");
           yPN.setAttribute("id","parts");
-          yPN.setAttribute("rows","29");
-          yPN.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
-          document.getElementById("Active").appendChild(yPN);
-        BOM = BOM.filter(undupe).sort();
-        document.getElementById("search").options.add( addOption("") );
-        for(b of BOM)
-          document.getElementById("search").options.add( addOption(b) );
+          yPN.setAttribute("style","height:100%;width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
+          $("#Active").append(yPN);
+          //document.getElementById("Active").appendChild(yPN);
+        //BOM = BOM.filter(undupe).sort();
+        $("#search").append( addOption([],"") );
+        for(b of Object.keys(BOM).sort() )
+          $("#search").append( addOption(BOM[b],b) );
       }
     }
   });
 </script>
 
 <div id="map" style="width:960px;height:720px;float:left;"></div>
-<div id="Active" style="width:20%;height:720px;float:left;background-color:#bbb;">
+<div id="Active" style="width:25%;height:720px;float:left;background-color:#bbb;">
 </div>
 <script type="text/javascript">
   //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
@@ -126,28 +128,26 @@
 </script>
 
 <script language="javascript">
-function regurgitate(e){
-  for(rowM of markers){
-    if(rowM.POI==e){
-      document.getElementById("basic").value = `
-Company\t`+rowM.POI+`
-Address\t`+rowM["Street, Suite, Bldg"]+`
-\t`+rowM.City+`, `+rowM.State+` `+rowM.Zip+`
-\t`+rowM.Country+`
+function regurgitate(){
+  document.getElementById("err").innerHTML += '<BR>'+$('#search option:selected').text();
+  document.getElementById("err").innerHTML += '<BR>'+$('#search option:selected').val();
+  var t = $('#search option:selected').text();
+  var address = markers.find(s=>s.POI==t);
+  //var address = markers.filter(s=>s.POI==t);
+  var basicInfo = basicMarkerInfo(address.POI,
+                                  address["Street, Suite, Bldg"],
+                                  address.City,address.State,address.Zip,
+                                  address.Country,
+                                  address.Driving,address["Drive Time (clock)"]);
+  $("#basic").val(basicInfo);
 
-Distance\t`+rowM.Driving+` mile(s)
-Driving Time\t`+rowM["Drive Time (clock)"];
-      break;
-    }
-  }
-  document.getElementById('parts').value = `
-Parts\t\t\tUnit Price`;
-  for(rowP of sourcing){
-    if(rowP.Vendor==e)
-      document.getElementById('parts').value += "\n"+rowP["Item Number"]+"\t\t$ "+(rowP["Price"]*1).toFixed(4);
-  }
+  var activeparts = sources.filter(p=>p.Vendor==t);
+  var partInfo = `\nParts\t\t\tUnit Price`;
+  for(p of activeparts)  partInfo += "\n"+p["Item Number"]+"\t\t$ "+(p["Price"]*1).toFixed(4);
+  $('#parts').val(partInfo);
   return 1;
 }
+
 </script>
 
 </body>

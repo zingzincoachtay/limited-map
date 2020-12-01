@@ -1,5 +1,4 @@
 var map,L;
-var POI=new Set(), BOM=[];//
 //var leafletmaplayer = 'map';
 var origins = [
   {"c":[39.640784,-86.831823],"z":1000,"name":"Heartland Automotive"},
@@ -20,16 +19,18 @@ function placeOrigin(x,Layer,map){
     //"title" : x.name,
     "keyboard" : true,
     "zIndexOffset":x.z}).addTo(map);
-  return p.bindPopup(x.name+"<BR>",{autoClose:false});
+  //return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
+  return p.bindPopup(x.name+"<BR>",{autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
 function placeMarker(x,Layer,map){
   var p = Layer.marker(x.c,{
     //"title" : x.name, // enable a mouseover popup
     "keyboard" : false
   }).addTo(map);
-  return p.bindPopup(x.name+"<BR>",{autoClose:false});
+  //return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
+  return p.bindPopup(x.name+"<BR>",{autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
 function hazardLayers(phenom,L,map) {
   // Pulling data from NOAA and USGS
