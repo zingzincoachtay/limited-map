@@ -17,20 +17,26 @@ function onMapClick(e){
   }
 }
 function onMarkerClick(e){
-  document.getElementById("err").innerHTML += '<BR>'+e.target._popup._content;
-  document.getElementById("err").innerHTML += '<BR>'+JSON.stringify([e.latlng.lat,e.latlng.lng]);
-  $('#search').val( JSON.stringify([e.latlng.lat,e.latlng.lng]) );
+  // Allow synchronization between the map marker and the SELECT box
+  //
+  // .toString() ensures the compatibility with the values parsed from Spreadsheet
+  $('#search').val( JSON.stringify([e.latlng.lat.toString(),e.latlng.lng.toString()]) );
+  return regurgitate();
 }
 //Array.prototype.toAdd2 = (v,callback) => (typeof exists(v,this,callback)==='undefined') ? true : false;
 const toAdd = (v,o,callback) => (typeof exists(v,o,callback)==='undefined') ? true : false;
 const exists = (v,o,callback) => o.find( item=>callback(item,v) );
 function distancesOf(origin){
   var BigD = [];
+  var BigD = markers.map(m=>{name:m.POI,span:map.distance(
+    L.latLng({lat:origin[0],lng:origin[1]}),
+    L.latLng({lat:m.Latitude,lng:m.Longitude})
+  )});
   for(m of markers){
-    if( BigD.includes(m.POI) ) continue;
-    var LittleD = unit_great_circle_distance(
-      {Lat:origin[0],Lon:origin[1]},
-      {Lat:m.Latitude,Lon:m.Longitude}
+    //if( BigD.includes(m.POI) ) continue;
+    var LittleD = map.distance(
+      L.latLng({lat:origin[0],lng:origin[1]}),
+      L.latLng({lat:m.Latitude,lng:m.Longitude})
     );
     if( toAdd(LittleD,BigD, (it,v)=>it.span<v ) )
       BigD.push({name:m.POI,span:LittleD});
