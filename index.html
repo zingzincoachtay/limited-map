@@ -129,22 +129,25 @@
 
 <script language="javascript">
 function regurgitate(){
-  document.getElementById("err").innerHTML += '<BR>'+$('#search option:selected').text();
-  document.getElementById("err").innerHTML += '<BR>'+$('#search option:selected').val();
+  //document.getElementById("err").innerHTML += '<BR>'+$('#search option:selected').text();
+  //$("div#err").html
   var t = $('#search option:selected').text();
-  var address = markers.find(s=>s.POI==t);
-  //var address = markers.filter(s=>s.POI==t);
-  var basicInfo = basicMarkerInfo(address.POI,
-                                  address["Street, Suite, Bldg"],
-                                  address.City,address.State,address.Zip,
-                                  address.Country,
-                                  address.Driving,address["Drive Time (clock)"]);
+  //var address = markers.find(s=>s.POI==t);
+  var address = markers.filter(s=>s.POI==t);
+  var basicInfo = basicMarkerInfo(address[0].POI,
+                                  address[0]["Street, Suite, Bldg"],
+                                  address[0].City,address[0].State,address[0].Zip,
+                                  address[0].Country,
+                                  address[0].Driving,address[0]["Drive Time"]);
   $("#basic").val(basicInfo);
 
   var activeparts = sources.filter(p=>p.Vendor==t);
   var partInfo = `\nParts\t\t\tUnit Price`;
   for(p of activeparts)  partInfo += "\n"+p["Item Number"]+"\t\t$ "+(p["Price"]*1).toFixed(4);
   $('#parts').val(partInfo);
+
+  var hanabi = address.map(s=>L.latLng({lat:s.Latitude,lng:s.Longitude}));
+  for(h of hanabi)  L.openPopup(L,h);
   return 1;
 }
 

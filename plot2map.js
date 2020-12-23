@@ -21,7 +21,7 @@ function placeOrigin(x,Layer,map){
     "zIndexOffset":x.z}).addTo(map);
   //return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
-  return p.bindPopup(x.name+"<BR>",{autoPan:false,autoClose:false}).on('click', onMarkerClick);
+  return p.bindPopup(x.name+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
 function placeMarker(x,Layer,map){
   var p = Layer.marker(x.c,{
@@ -30,7 +30,7 @@ function placeMarker(x,Layer,map){
   }).addTo(map);
   //return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
-  return p.bindPopup(x.name+"<BR>",{autoPan:false,autoClose:false}).on('click', onMarkerClick);
+  return p.bindPopup(x.name+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
 function hazardLayers(phenom,L,map) {
   // Pulling data from NOAA and USGS
@@ -141,7 +141,7 @@ const OffCenter = (c,y,x) => [c[0]+y,c[1]+x];
 // Earth radii in kilometers 6371.0088 (km), given a spheric shape
 const great_circle_distance_km = (p,M) => unit_great_circle_distance(p,M)*6371.0088;
 const great_circle_distance_mi = (p,M) => km2mi( great_circle_distance_km(p,M) );
-const unit_great_circle_distance = (p,M) => Math.acos( diffLatSine(p.Lat,M.Lat)+diffLatCosine(p.Lat,M.Lat)*Math.cos( d2r(p.Lon-M.Lon) ) );
+const unit_great_circle_distance = (p,M) => Math.acos( diffLatSine(p.lat,M.lat)+diffLatCosine(p.lat,M.lat)*Math.cos( d2r(p.lng-M.lng) ) );
 const diffLatCosine = (c0,c) => Math.cos( d2r(c0) )*Math.cos( d2r(c) );
 const diffLatSine   = (c0,c) => Math.sin( d2r(c0) )*Math.sin( d2r(c) );
 const d2r = (d) => d*(3.141592653589793238462/180);
