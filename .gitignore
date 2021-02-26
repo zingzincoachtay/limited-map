@@ -39,3 +39,6 @@ inc/
 *.csv
 *.geojson
 *.jquery
+._*
+.DS_Store
+
