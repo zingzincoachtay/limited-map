@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Something Pretty</title>
+  <!-- Load jQuery from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
+  <!-- Load SheetJS from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+  <!-- Load Leaflet from CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin=""
+  />
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""
+  ></script>
+  <!-- Load Esri Leaflet from CDN -->
+  <!-- See: https://dlab.berkeley.edu/blog/data-and-tools-mapping-covid-19 -->
+  <!-- See: http://esri.github.io/esri-leaflet/examples/ -->
+  <!-- See: https://dlab-geo.github.io/webmaps/covid-19/covid-js.html -->
+  <!-- See: https://github.com/dlab-geo/webmaps/blob/master/covid-19/covid-js.html -->
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://unpkg.com/esri-leaflet@2.5.0/dist/esri-leaflet.js"
+    integrity="sha512-ucw7Grpc+iEQZa711gcjgMBnmd9qju1CICsRaryvX7HJklK0pGl/prxKvtHwpgm5ZHdvAil7YPxI1oWPOWK3UQ=="
+    crossorigin=""></script>
+
+  <script language="javascript">
+  </script>
+  <script src="./main.js"></script>
+  <script src="./plot2map.js"></script>
+  <script src="./plotCovidMap.js"></script>
+  <style>
+  html, body, #map {
+    margin:0; padding:0;  width : 100%; height : 100%;
+  }
+  </style>
+</header>
+<body>
+<input type="file" id="db" multiple />
+<div id="err"></div>
+<script language="javascript">
+  //https://stackoverflow.com/questions/8238407/how-to-parse-excel-xls-file-in-javascript-html5
+  //https://redstapler.co/sheetjs-tutorial-convert-excel-html-table/
+  $('#db').change(function(e) {
+    var reader = new FileReader();
+    reader.readAsArrayBuffer(e.target.files[0]);
+    reader.onload = function(e){
+      var data = new Uint8Array(reader.result);
+      var workbook = XLSX.read(data,{type:'array'});
+      // Store in global variables - markers, POI, BOM
+      // Alternative, retrieve the output JSON from the field?
+      // Plot only occurs when the data is loaded anyways.
+      markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+      sourcing = XLSX.utils.sheet_to_json(workbook.Sheets["MASTER"]);
+      for(s of markers){
+        POI.add({
+          c:[s.Latitude,s.Longitude],
+          name:s.POI+"<br>"+s.City+", "+s.State
+        });
+        BOM.push(s.POI);
+      }
+      for(p of sourcing){
+
+      }
+      POI.forEach((p,i) => placeMarker(p,L,map));//&reg; &copy;
+      if( BOM.length>0 ){
+        const ySO = document.createElement("SELECT");
+          ySO.setAttribute("id","search");
+          ySO.setAttribute("style","width:100%");
+          ySO.setAttribute("onChange","javascript:regurgitate(this.value)");
+          document.getElementById("Active").appendChild(ySO);
+        const yTA = document.createElement("TEXTAREA");
+          yTA.setAttribute("id","basic");
+          yTA.setAttribute("rows","9");
+          yTA.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
+          document.getElementById("Active").appendChild(yTA);
+        const yPN = document.createElement("TEXTAREA");
+          yPN.setAttribute("id","parts");
+          yPN.setAttribute("rows","29");
+          yPN.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
+          document.getElementById("Active").appendChild(yPN);
+        BOM = BOM.filter(undupe).sort();
+        document.getElementById("search").options.add( addOption("") );
+        for(b of BOM)
+          document.getElementById("search").options.add( addOption(b) );
+      }
+    }
+  });
+</script>
+
+<div id="map" style="width:960px;height:720px;float:left;"></div>
+<div id="Active" style="width:20%;height:720px;float:left;background-color:#bbb;">
+</div>
+<script type="text/javascript">
+  //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
+  var epicenter = origins[0];
+  //Discussion of efficiency: https://api.jquery.com/ready/
+  $(function() {
+    // Made this variable global, so onChange event can use the map reference
+    map = L.map('map',{ // Can't bake into Class because of 'map' field
+      scrollWheelZoom : true,
+      center : OffCenter(epicenter.c,-1,0),
+      zoomSnap : 0.01,
+      //zoomDelta : 0.05,
+      zoom : 5
+    });
+    DrawBaseMapLayer(L,map);
+
+    // Radius provided in meters
+    CirclesInMiles.map(mi2m).forEach((e) => {
+      L.circle(epicenter.c,{radius:e,opacity:0.5,fillOpacity:0.05}).addTo(map)
+    });
+
+    var mHAGC = placeOrigin(epicenter,L,map),
+        mHALF = placeOrigin(origins[1],L,map);
+
+    map.on('click', onMapClick);
+
+    hazardLayers('',L,map);
+
+  });
+
+</script>
+
+<script language="javascript">
+function regurgitate(e){
+  for(rowM of markers){
+    if(rowM.POI==e){
+      document.getElementById("basic").value = `
+Company\t`+rowM.POI+`
+Address\t`+rowM["Street, Suite, Bldg"]+`
+\t`+rowM.City+`, `+rowM.State+` `+rowM.Zip+`
+\t`+rowM.Country+`
+
+Distance\t`+rowM.Driving+` mile(s)
+Driving Time\t`+rowM["Drive Time (clock)"];
+      break;
+    }
+  }
+  document.getElementById('parts').value = `
+Parts\t\t\tUnit Price`;
+  for(rowP of sourcing){
+    if(rowP.Vendor==e)
+      document.getElementById('parts').value += "\n"+rowP["Item Number"]+"\t\t$ "+(rowP["Price"]*1).toFixed(4);
+  }
+  return 1;
+}
+</script>
+
+</body>
+</html>
