@@ -9,14 +9,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
   <!-- Load Leaflet from CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-    crossorigin=""
-  />
-  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-    crossorigin=""
-  ></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
   <!-- Load Esri Leaflet from CDN -->
   <!-- See: https://dlab.berkeley.edu/blog/data-and-tools-mapping-covid-19 -->
   <!-- See: http://esri.github.io/esri-leaflet/examples/ -->
@@ -55,18 +53,25 @@
       // Plot only occurs when the data is loaded anyways.
       markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
       sources = XLSX.utils.sheet_to_json(workbook.Sheets["MASTER"]);
+      central = XLSX.utils.sheet_to_json(workbook.Sheets["RELATIVITY"]);
       for(s of markers){
-        POI.add({
+        // It doesn't matter if new Set() or new Array()
+        POI.push({
           c:[s.Latitude,s.Longitude],
-          name:s.POI+"<br>"+s.City+", "+s.State
+          based:s.POI+"<br>"+s.City+", "+s.State,
+          name:s.POI
         });
-        BOM[s.POI] = [s.Latitude,s.Longitude];
       }
+      for(r of central) SYNC[r.POI] = {hub:r.HUB,turf:r.LOCAL};
       for(p of sources){
-
+        IQ.push({
+          report:[p.Price],
+          item:p["Item Number"],
+          name:p.Vendor
+        });
       }
       POI.forEach((p,i) => placeMarker(p,L,map));//&reg; &copy;
-      if( Object.keys(BOM).length>0 ){
+      if( POI.length>0 ){
         const ySO = $("<SELECT>");
           ySO.attr({
             "id":"search",
@@ -85,9 +90,9 @@
           $("#Active").append(yPN);
           //document.getElementById("Active").appendChild(yPN);
         //BOM = BOM.filter(undupe).sort();
-        $("#search").append( addOption([],"") );
-        for(b of Object.keys(BOM).sort() )
-          $("#search").append( addOption(BOM[b],b) );
+        $("#search").append( $("<OPTION>").val([]).text("") );
+        var uniquePOI = new Set( POI.map((u)=>u.name).sort() );
+        for(let b of uniquePOI)  $("#search").append( $("<OPTION>").val( JSON.stringify(SYNC[b].hub) ).text(b) );
       }
     }
   });
@@ -134,11 +139,18 @@ function regurgitate(){
   var t = $('#search option:selected').text();
   //var address = markers.find(s=>s.POI==t);
   var address = markers.filter(s=>s.POI==t);
-  var basicInfo = basicMarkerInfo(address[0].POI,
-                                  address[0]["Street, Suite, Bldg"],
-                                  address[0].City,address[0].State,address[0].Zip,
-                                  address[0].Country,
-                                  address[0].Driving,address[0]["Drive Time"]);
+  var basicInfo = '';
+  var duality;
+  // SELECT OPTIONS by coordinates, to achieve two-way synchronization
+  for(let a of address){
+    let mailbox = basicMarkerInfo([t,a["Street, Suite, Bldg"],a.City,a.State,a.Zip,a.Country]);
+    duality[mailbox][a.Plant] = basicDriveInfo([a.Plant,a.Driving,a["Drive Time"]]);
+  }
+  var combineDriving = [...new Set( Object.keys(duality) )];
+  for(let d of combineDriving){
+    basicInfo += d;
+    for(let dk of Object.keys(combineDriving[d]))  basicInfo += duality[d][dk];
+  }
   $("#basic").val(basicInfo);
 
   var activeparts = sources.filter(p=>p.Vendor==t);

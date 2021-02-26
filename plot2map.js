@@ -1,10 +1,10 @@
 var map,L;
 //var leafletmaplayer = 'map';
 var origins = [
-  {"c":[39.640784,-86.831823],"z":1000,"name":"Heartland Automotive"},
-  {"c":[40.363639,-86.835809],"z":999,"name":"Heartland Automotive - Lafayette"}
+  {"c":[39.640784,-86.831823],"z":1000,"based":"Heartland Automotive","name":"Heartland Automotive"},
+  {"c":[40.363639,-86.835809],"z":999,"based":"Heartland Automotive - Lafayette","name":"Heartland Automotive - Lafayette"}
 ];
-var CirclesInMiles = [100,200,300,500,1000];
+var CirclesInMiles = [50,100,200,300,500,1000];
 //var CirclesColors = [];
 
 function DrawBaseMapLayer(Layer,map){
@@ -19,9 +19,9 @@ function placeOrigin(x,Layer,map){
     //"title" : x.name,
     "keyboard" : true,
     "zIndexOffset":x.z}).addTo(map);
-  //return p.bindPopup(x.name+"<BR>",{autoClose:false});
+  return p.bindPopup(x.based+"<BR>",{autoClose:false});//
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
-  return p.bindPopup(x.name+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
+  //this is a new attempt ->> return p.bindPopup(x.name+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
 function placeMarker(x,Layer,map){
   var p = Layer.marker(x.c,{
@@ -30,7 +30,7 @@ function placeMarker(x,Layer,map){
   }).addTo(map);
   //return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
-  return p.bindPopup(x.name+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
+  return p.bindPopup(x.based+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
 function hazardLayers(phenom,L,map) {
   // Pulling data from NOAA and USGS
@@ -44,7 +44,6 @@ function hazardLayers(phenom,L,map) {
     ,weatherWarnings(L,map)
     ,epidemicCOVID(L,map)
   );
-
   L.control.layers({},hazLayers,{collapsed:true,hideSingleBase:false,autoZIndex:false,position:"bottomleft"}).addTo(map);
   return hazLayers.Topography.addTo(map);
 }
