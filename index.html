@@ -79,7 +79,7 @@
           "name":s.POI+`<br>${s.City}, ${s.State}`
         };
         POI = mappable(POI,s.ID
-                  ,JSON.stringify(para.c)
+                  ,JSON.stringify(para.c)// leaflet provides `getLayerId` methods from `featureGroup`
                   ,Object.assign(para,{
                     "marker":placeMarker(para,L,map,[20,30],{})
                   })
@@ -106,6 +106,8 @@
                   }
         );
       }
+      selectlayers[homegroupname].clearLayers();//selectlayers.pop();
+      selectlayers = {};// clear selectlayers.center when loading data
       if( Object.keys(SELECTBOX).length>0 ){
         for(let group of Object.keys(SELECTBOX) )
             selectlayers[group] = L.featureGroup( Object.keys(POI[group]).map(e=>POI[group][e].marker) )
@@ -113,6 +115,7 @@
                                       .addTo(map);
         profiler(
           Object.keys(SELECTBOX).map( (s)=>({[SELECTBOX[s]]:s}) )
+          ,profilerAttr
         );
       }
     }
@@ -135,10 +138,10 @@
       L.circle(epicenter.c,{"radius":e,"opacity":0.5,"fillOpacity":0.05}).addTo(map)
     });
 
-    selectlayers.center = L.featureGroup(
+    selectlayers[homegroupname] = L.featureGroup(
       origins.map( (place)=>placeMarker(place,L,map,[20,30],{"zIndexOffset":place.z}) )
     ).bindPopup(epicenter.base)
-      .addTo(map);
+     .addTo(map);
 
     hazardLayers(L,map);
   });
@@ -146,31 +149,6 @@
 </script>
 
 <script language="javascript">
-function regurgitate(){
-  //document.getElementById("err").innerHTML += '<BR>'+$('#search option:selected').text();
-  //$("div#err").html
-  let t = $('#search option:selected').val();
-  let basicInfo = {};
-  // SELECT OPTIONS by two-way synchronization
-  for(let a of markers.filter(m=>m.ID==t)){
-      if(typeof basicInfo[`${a.City}, ${a.State}`]               === 'undefined')
-        basicInfo = {[`${a.City}, ${a.State}`]:{[basicProfilerDisplay[0]]:basicMarkerInfo(a)}};
-      if(typeof basicInfo[`${a.City}, ${a.State}`][`${a.Plant}`] === 'undefined')
-        basicInfo[`${a.City}, ${a.State}`][`${a.Plant}`] = basicDriveInfo(a);
-  }
-  for(let i of Object.keys(basicInfo)){
-      basicInfo[i].info += basicProfilerDisplay.slice(1).map((p)=>basicInfo[i][p]||'').join('');
-      for(let unknown of Object.keys(basicInfo[i]).filter((p)=>!basicProfilerDisplay.includes(p)).sort())
-          basicInfo[i].info += basicInfo[i][unknown];
-  }
-  $("#basic").val( Object.keys(basicInfo).map((i)=>basicInfo[i].info).join() );
-
-  let itemInfo = ["\nParts\t\t\tUnit Price"];
-  $('#parts').val( itemInfo.concat(sources.filter(s=>s.ID==t).map( (p)=>`${p["Item Number"]}\t\t$ `+(p["Price"]*1).toFixed(4) )).join("\n") );
-
-  selectlayers[t].openPopup();
-  return 1;
-}
 </script>
 
 </body>

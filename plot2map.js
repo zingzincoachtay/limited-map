@@ -5,15 +5,14 @@ const DrawBaseMapLayer = (Layer,map) => Layer.tileLayer('https://{s}.tile.openst
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 const placeMarker = function(x,Layer,map,iconSize,customOpts){//&reg; &copy;
-  Layer.Icon.Default.prototype.options.iconSize = iconSize;
+  //Layer.Icon.Default.prototype.options.iconSize = iconSize;
   let names = {"hovertooltipbutnohtml":x.base,"openpopupandhtml":x.name};
   var p = Layer.marker(x.c,Object.assign({
     "title" : names.hovertooltipbutnohtml, // enable a mouseover popup
-    "value" : x.ID,
+    "value" : x.ID,// "value" is not in specification, but will be accessible and key to link `map` and `select`
     "keyboard" : false
   },customOpts));//.addTo(map);
-  //return p.bindPopup(x.name+"<BR>",{autoClose:false});
-  //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
+  //return p.bindPopup(x.name+"<BR>",{autoClose:false});//.openPopup();
   return p.bindPopup(names.openpopupandhtml,{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
 function hazardLayers(L,map) {
