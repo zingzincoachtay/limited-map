@@ -4,16 +4,22 @@
 <meta charset="utf-8">
 <title>Something Pretty</title>
   <!-- Load jQuery from CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+    integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+    crossorigin=""></script>
   <!-- Load SheetJS from CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/jszip.min.js"
+    integrity="sha512-jYe/kS/JGLwuERUi4ithQE6kKW6udtjJp/GJrcXGfr/SSU2/1V77AL6ZpWWLb52z3BnK4rrfGCeMXYDFByMlzQ=="
+    crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.min.js"
+    integrity="sha512-WaHZ16+n6qSSVxDii8MZGmFlnro3iZdJa/hb1XKraoMx1/HVILhLdAX22ypk4lT/8+t4XMYcjzCDwfvZ1CAJgw=="
+    crossorigin=""></script>
   <!-- Load Leaflet from CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css"
+    integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA=="
     crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"
+    integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA=="
     crossorigin=""></script>
   <!-- Load Esri Leaflet from CDN -->
   <!-- See: https://dlab.berkeley.edu/blog/data-and-tools-mapping-covid-19 -->
@@ -21,78 +27,87 @@
   <!-- See: https://dlab-geo.github.io/webmaps/covid-19/covid-js.html -->
   <!-- See: https://github.com/dlab-geo/webmaps/blob/master/covid-19/covid-js.html -->
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <script src="https://unpkg.com/esri-leaflet@2.5.0/dist/esri-leaflet.js"
-    integrity="sha512-ucw7Grpc+iEQZa711gcjgMBnmd9qju1CICsRaryvX7HJklK0pGl/prxKvtHwpgm5ZHdvAil7YPxI1oWPOWK3UQ=="
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.0.2/esri-leaflet.min.js"
+    integrity="sha512-gIH+jRsDGsufpY/g9qnzPNG9gHLSAcoDwFYf6q9i5VAmI8HqjZpwIq9zfY3zlMm7fZy5RpXSF34eedTCZnPxVw=="
     crossorigin=""></script>
 
-  <script language="javascript">
+  <script type="text/javascript">
   </script>
-  <script src="./main.js"></script>
-  <script src="./plot2map.js"></script>
+  <script src="./configurations.js"></script>
   <script src="./plotCovidMap.js"></script>
+  <script src="./plot2map.js"></script>
+  <script src="./main.js"></script>
   <style>
   html, body, #map {
     margin:0; padding:0;  width : 100%; height : 100%;
   }
   </style>
-</header>
+</head>
 <body>
 <input type="file" id="db" multiple />
 <div id="err"></div>
-<script language="javascript">
+<script type="text/javascript">
   //https://stackoverflow.com/questions/8238407/how-to-parse-excel-xls-file-in-javascript-html5
   //https://redstapler.co/sheetjs-tutorial-convert-excel-html-table/
+  //const yERR = $("<DIV>").attr({"id":"search"}).text("error digest goes here");
+  //document.getElementById("err").innerHTML = markers;
+  //$("div#err").html = "error digest goes here";
   $('#db').change(function(e) {
     var reader = new FileReader();
     reader.readAsArrayBuffer(e.target.files[0]);
     reader.onload = function(e){
       var data = new Uint8Array(reader.result);
       var workbook = XLSX.read(data,{type:'array'});
-      // Store in global variables - markers, POI, BOM
-      // Alternative, retrieve the output JSON from the field?
-      // Plot only occurs when the data is loaded anyways.
-      markers = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
-      sources = XLSX.utils.sheet_to_json(workbook.Sheets["MASTER"]);
-      central = XLSX.utils.sheet_to_json(workbook.Sheets["RELATIVITY"]);
+      // Store in global variables - markers, connect, sources
+      markers = XLSX.utils.sheet_to_json(workbook.Sheets["XY"]);
+      sources = XLSX.utils.sheet_to_json(workbook.Sheets["DB"]);
+      connect = XLSX.utils.sheet_to_json(workbook.Sheets["POC"]);
+      let SELECTBOX = {};
       for(s of markers){
-        // It doesn't matter if new Set() or new Array()
-        POI.push({
-          c:[s.Latitude,s.Longitude],
-          based:s.POI+"<br>"+s.City+", "+s.State,
-          name:s.POI
-        });
+        if(s.Status === 'Inactive')  continue;
+        let xy = L.latLng(s.Latitude,s.Longitude);
+        let para = {
+          "c":[xy.lat.toString(),xy.lng.toString()],
+          "ID":s.ID,
+          "base":s.POI,
+          "name":s.POI+`<br>${s.City}, ${s.State}`
+        };
+        POI = mappable(POI,s.ID
+                  ,JSON.stringify(para.c)
+                  ,Object.assign(para,{
+                    "marker":placeMarker(para,L,map,[20,30],{})
+                  })
+        );  SELECTBOX[s.ID] = s.POI;
       }
-      for(r of central) SYNC[r.POI] = {hub:r.HUB,turf:r.LOCAL};
       for(p of sources){
-        IQ.push({
-          report:[p.Price],
-          item:p["Item Number"],
-          name:p.Vendor
-        });
+        BOM = mappable(BOM,p.ID
+                  ,p["Item Number"]
+                  ,{
+                    "price":p.Price,
+                    "class":p.Class,
+                    "plant":p.EPlnt,
+                  }
+        );
       }
-      POI.forEach((p,i) => placeMarker(p,L,map));//&reg; &copy;
-      if( POI.length>0 ){
-        const ySO = $("<SELECT>");
-          ySO.attr({
-            "id":"search",
-            "style":"width:100%",
-            "onChange":"javascript:regurgitate()"
-          }); $("#Active").append(ySO);
-        const yTA = document.createElement("TEXTAREA");
-          yTA.setAttribute("id","basic");
-          yTA.setAttribute("rows","9");
-          yTA.setAttribute("style","width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
-          $("#Active").append(yTA);
-          //document.getElementById("Active").appendChild(yTA);
-        const yPN = document.createElement("TEXTAREA");
-          yPN.setAttribute("id","parts");
-          yPN.setAttribute("style","height:100%;width:100%;border:0px solid #bbb;padding:0px;background-image:url(ha.png);outline:none;");
-          $("#Active").append(yPN);
-          //document.getElementById("Active").appendChild(yPN);
-        //BOM = BOM.filter(undupe).sort();
-        $("#search").append( $("<OPTION>").val([]).text("") );
-        var uniquePOI = new Set( POI.map((u)=>u.name).sort() );
-        for(let b of uniquePOI)  $("#search").append( $("<OPTION>").val( JSON.stringify(SYNC[b].hub) ).text(b) );
+      for(c of connect){
+        SYNC = mappable(SYNC,c.ID
+                  ,c.OOH
+                  ,{
+                    "phone":c["Phone Number"],
+                    "email":c.Email,
+                    "title":c.Title,
+                    "human":c.Contact
+                  }
+        );
+      }
+      if( Object.keys(SELECTBOX).length>0 ){
+        for(let group of Object.keys(SELECTBOX) )
+            selectlayers[group] = L.featureGroup( Object.keys(POI[group]).map(e=>POI[group][e].marker) )
+                                      .bindPopup(SELECTBOX[group])
+                                      .addTo(map);
+        profiler(
+          Object.keys(SELECTBOX).map( (s)=>({[SELECTBOX[s]]:s}) )
+        );
       }
     }
   });
@@ -103,31 +118,23 @@
 </div>
 <script type="text/javascript">
   //https://datawanderings.com/2018/10/28/making-a-map-in-d3-js-v-5/
-  var epicenter = origins[0];
   //Discussion of efficiency: https://api.jquery.com/ready/
   $(function() {
     // Made this variable global, so onChange event can use the map reference
-    map = L.map('map',{ // Can't bake into Class because of 'map' field
-      scrollWheelZoom : true,
-      center : OffCenter(epicenter.c,-1,0),
-      zoomSnap : 0.01,
-      //zoomDelta : 0.05,
-      zoom : 5
-    });
+    map = L.map('map',mapconf).on('click', onMapClick );
     DrawBaseMapLayer(L,map);
 
-    // Radius provided in meters
+    // Radius provided in miles, shown in metres
     CirclesInMiles.map(mi2m).forEach((e) => {
-      L.circle(epicenter.c,{radius:e,opacity:0.5,fillOpacity:0.05}).addTo(map)
+      L.circle(epicenter.c,{"radius":e,"opacity":0.5,"fillOpacity":0.05}).addTo(map)
     });
 
-    var mHAGC = placeOrigin(epicenter,L,map),
-        mHALF = placeOrigin(origins[1],L,map);
+    selectlayers.center = L.featureGroup(
+      origins.map( (place)=>placeMarker(place,L,map,[20,30],{"zIndexOffset":place.z}) )
+    ).bindPopup(epicenter.base)
+      .addTo(map);
 
-    map.on('click', onMapClick);
-
-    hazardLayers('',L,map);
-
+    hazardLayers(L,map);
   });
 
 </script>
@@ -136,33 +143,28 @@
 function regurgitate(){
   //document.getElementById("err").innerHTML += '<BR>'+$('#search option:selected').text();
   //$("div#err").html
-  var t = $('#search option:selected').text();
-  //var address = markers.find(s=>s.POI==t);
-  var address = markers.filter(s=>s.POI==t);
-  var basicInfo = '';
-  var duality;
-  // SELECT OPTIONS by coordinates, to achieve two-way synchronization
-  for(let a of address){
-    let mailbox = basicMarkerInfo([t,a["Street, Suite, Bldg"],a.City,a.State,a.Zip,a.Country]);
-    duality[mailbox][a.Plant] = basicDriveInfo([a.Plant,a.Driving,a["Drive Time"]]);
+  let t = $('#search option:selected').val();
+  let basicInfo = {};
+  // SELECT OPTIONS by two-way synchronization
+  for(let a of markers.filter(m=>m.ID==t)){
+      if(typeof basicInfo[`${a.City}, ${a.State}`]               === 'undefined')
+        basicInfo = {[`${a.City}, ${a.State}`]:{[basicProfilerDisplay[0]]:basicMarkerInfo(a)}};
+      if(typeof basicInfo[`${a.City}, ${a.State}`][`${a.Plant}`] === 'undefined')
+        basicInfo[`${a.City}, ${a.State}`][`${a.Plant}`] = basicDriveInfo(a);
   }
-  var combineDriving = [...new Set( Object.keys(duality) )];
-  for(let d of combineDriving){
-    basicInfo += d;
-    for(let dk of Object.keys(combineDriving[d]))  basicInfo += duality[d][dk];
+  for(let i of Object.keys(basicInfo)){
+      basicInfo[i].info += basicProfilerDisplay.slice(1).map((p)=>basicInfo[i][p]||'').join('');
+      for(let unknown of Object.keys(basicInfo[i]).filter((p)=>!basicProfilerDisplay.includes(p)).sort())
+          basicInfo[i].info += basicInfo[i][unknown];
   }
-  $("#basic").val(basicInfo);
+  $("#basic").val( Object.keys(basicInfo).map((i)=>basicInfo[i].info).join() );
 
-  var activeparts = sources.filter(p=>p.Vendor==t);
-  var partInfo = `\nParts\t\t\tUnit Price`;
-  for(p of activeparts)  partInfo += "\n"+p["Item Number"]+"\t\t$ "+(p["Price"]*1).toFixed(4);
-  $('#parts').val(partInfo);
+  let itemInfo = ["\nParts\t\t\tUnit Price"];
+  $('#parts').val( itemInfo.concat(sources.filter(s=>s.ID==t).map( (p)=>`${p["Item Number"]}\t\t$ `+(p["Price"]*1).toFixed(4) )).join("\n") );
 
-  var hanabi = address.map(s=>L.latLng({lat:s.Latitude,lng:s.Longitude}));
-  for(h of hanabi)  L.openPopup(L,h);
+  selectlayers[t].openPopup();
   return 1;
 }
-
 </script>
 
 </body>

@@ -38,7 +38,8 @@ inc/
 *.htm
 *.csv
 *.geojson
-*.jquery
 ._*
 .DS_Store
-
+00_archive/
+configurations.js
+sample-*

@@ -1,38 +1,22 @@
-var map,L;
+var L,map;
 //var leafletmaplayer = 'map';
-var origins = [
-  {"c":[39.640784,-86.831823],"z":1000,"based":"Heartland Automotive","name":"Heartland Automotive"},
-  {"c":[40.363639,-86.835809],"z":999,"based":"Heartland Automotive - Lafayette","name":"Heartland Automotive - Lafayette"}
-];
-var CirclesInMiles = [50,100,200,300,500,1000];
-//var CirclesColors = [];
 
-function DrawBaseMapLayer(Layer,map){
-  return Layer.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-}
-function placeOrigin(x,Layer,map){
-  Layer.Icon.Default.prototype.options.iconSize = [20,30];
-  // Choose mouseover popup versus onclick popup
-  var p = Layer.marker(x.c,{
-    //"title" : x.name,
-    "keyboard" : true,
-    "zIndexOffset":x.z}).addTo(map);
-  return p.bindPopup(x.based+"<BR>",{autoClose:false});//
-  //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
-  //this is a new attempt ->> return p.bindPopup(x.name+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
-}
-function placeMarker(x,Layer,map){
-  var p = Layer.marker(x.c,{
-    //"title" : x.name, // enable a mouseover popup
+const DrawBaseMapLayer = (Layer,map) => Layer.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+const placeMarker = function(x,Layer,map,iconSize,customOpts){//&reg; &copy;
+  Layer.Icon.Default.prototype.options.iconSize = iconSize;
+  let names = {"hovertooltipbutnohtml":x.base,"openpopupandhtml":x.name};
+  var p = Layer.marker(x.c,Object.assign({
+    "title" : names.hovertooltipbutnohtml, // enable a mouseover popup
+    "value" : x.ID,
     "keyboard" : false
-  }).addTo(map);
+  },customOpts));//.addTo(map);
   //return p.bindPopup(x.name+"<BR>",{autoClose:false});
   //return p.bindPopup(x.name+"<BR>",{autoClose:false}).openPopup();
-  return p.bindPopup(x.based+"<BR>",{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
+  return p.bindPopup(names.openpopupandhtml,{closeOnClick:false,autoPan:false,autoClose:false}).on('click', onMarkerClick);
 }
-function hazardLayers(phenom,L,map) {
+function hazardLayers(L,map) {
   // Pulling data from NOAA and USGS
   // https://viewer.nationalmap.gov/services/
   // https://www.weather.gov/gis/WebServices
@@ -44,15 +28,11 @@ function hazardLayers(phenom,L,map) {
     ,weatherWarnings(L,map)
     ,epidemicCOVID(L,map)
   );
-  L.control.layers({},hazLayers,{collapsed:true,hideSingleBase:false,autoZIndex:false,position:"bottomleft"}).addTo(map);
-  return hazLayers.Topography.addTo(map);
+  return L.control.layers({},hazLayers,{collapsed:true,hideSingleBase:false,autoZIndex:false,position:"bottomleft"}).addTo(map);
 }
-function Clouds(Layer,map) {
-  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer";
-  return {
+const Clouds = (Layer,map,hazXML="https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer") => ({
     "Clouds" : Layer.tileLayer.wms(hazXML, nowCOAST('1') )
-  };
-}
+});
 function Clouds2(Layer,map) {
   // Recent Weather Radar Imagery
   // Updated every 5 seconds, lasting several hours?
@@ -60,16 +40,13 @@ function Clouds2(Layer,map) {
   var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer/WMSServer";
   return Layer.tileLayer.wms(hazXML, nowCOAST('1') ).addTo(map);
 }
-function hazardHurricane(Layer,map) {
-  var hazXML = "https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer";
-  return {
+const hazardHurricane = (Layer,map,hazXML="https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer") => ({
     //SurfaceWindSwath:   Layer.tileLayer.wms(hazXML, nowCOAST('2') ),
     //ForecastWindExtent: Layer.tileLayer.wms(hazXML, nowCOAST('7') ),
     "Observed-Track and Eye": Layer.tileLayer.wms(hazXML, nowCOAST('4,3') ),
     "Forecast-Track, Eye and Cone": Layer.tileLayer.wms(hazXML, nowCOAST('9,8,6') ),
     "Siren Zone": Layer.tileLayer.wms(hazXML, nowCOAST('10') )
-  };
-}
+});
 function hazardHurricane2(Layer,map) {
   // Watches, Warnings, and Track/Intensity Forecasts
   // https://nowcoast.noaa.gov/arcgis/services/nowcoast/wwa_meteocean_tropicalcyclones_trackintensityfcsts_time/MapServer/WMSServer?request=GetCapabilities&service=WMS
@@ -134,7 +111,6 @@ function nowCOAST(Nq) {
   }
 }
 
-const OffCenter = (c,y,x) => [c[0]+y,c[1]+x];
 // https://en.wikipedia.org/wiki/Great-circle_distance#Formulae
 // https://mathworld.wolfram.com/GreatCircle.html
 // Earth radii in kilometers 6371.0088 (km), given a spheric shape
